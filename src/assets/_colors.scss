@@ -1,0 +1,26 @@
+$main: #f3efe9;
+$secondary: #CCC9C6;
+$secondary-darker: #807E7C;
+$secondary-light: #FFFFFF;
+$app-shadow: rgba(0, 0, 0, 0.5);
+$main-active: #1FAC86;
+$secondary-active: #72BCA8;
+$warning: #FA8E6C;
+$preview-main: #F2F1F1;
+$preview-accent-text: #D8222E;
+
+$app-background: $secondary-light;
+$main-background: $main;
+$el-shadow: $secondary;
+$border: $secondary-darker;
+$button-text: $secondary;
+
+$preview-code-background: $preview-main;
+$preview-code: $preview-accent-text;
+$markdown-background: $preview-main;
+
+$active-button-background: $main-active;
+$active-button-text: $secondary-light;
+$active-button-hover: $secondary-active;
+$active-button-active: $secondary-darker;
+$info: $secondary-active;

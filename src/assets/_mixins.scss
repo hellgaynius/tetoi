@@ -1,0 +1,31 @@
+@mixin light-shadow {
+  box-shadow: 4px 4px 0 colors.$el-shadow;
+} 
+
+@mixin radial-shadow {
+  box-shadow: 0 0 10px colors.$secondary-darker;
+}
+
+@mixin solid-border {
+  border: 1px solid colors.$border;
+}
+
+@mixin inactive-button {
+  color: colors.$secondary-darker;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  box-shadow: none;
+}
+
+@mixin active-button {
+  background-color: colors.$active-button-background;
+  color: colors.$active-button-text;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  @include light-shadow;
+  &:hover {
+    background-color: colors.$active-button-hover;
+  }
+  &:active {
+    background-color: colors.$active-button-active;
+  }
+}
