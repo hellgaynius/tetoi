@@ -1,25 +1,26 @@
 <script>
+import VButton from '@/components/base/VButton.vue';
+import { nanoid } from 'nanoid';
+
 export default {
-  data() {
-    return {
-      isAddSlotHidden: false,
-      isRemoveIconHidden: true,
-      hoveredSlot: null,
-    }
+  components: {
+    VButton,
   },
 
-  props: ['slots', 'currentSlotId', 'currentTextValue'],
-  emits: ['change-current-slot-id', 'remove-slot'],
+  props: {
+    slots: Object,
+    currentSlotNumber: Number,
+    currentTextValue: String,
+  },
+
+  emits: [
+    'change-current-slot-id', 
+    'remove-slot',
+  ],
 
   computed: {
     slotsQuantity() {
-      return this.slots.length
-    },
-  },
-
-  watch: {
-    slotsQuantity(newValue) {
-      this.isAddSlotHidden = newValue >= 10 ? true : false;
+      return this.slots.length;
     },
   },
 
@@ -28,16 +29,10 @@ export default {
       this.slots.push(
         {
           text: '', 
-          imgSrc: '../slot.png',
+          imgSrc: '',
+          id: nanoid(),
         }
       );
-    },
-
-    showRemoveIcon(index) {
-      if (this.slotsQuantity > 1) {
-        this.isRemoveIconHidden = false; 
-        this.hoveredSlot = index;
-      }
     },
 
     chooseSlot(index) {
@@ -49,38 +44,50 @@ export default {
 
 <template>
  <div class="result-images">
-    <div class="result-images__save-image-hint">
+    <div class="save-image-hint">
       To save full-sized picture to your phone gallery, 
       long-press on the miniature and choose the option from menu.
     </div>
-    <div class="result-images__carousel js-carousel">
+    <div class="carousel">
       <div 
-        class="result-images__slot"
+        class="slot-wrapper"
         v-for="(slot, index) in slots"
-        :key="index"
-        :class="{ current: currentSlotId === index }"
-        @click="chooseSlot(index)"
-        @mouseenter="showRemoveIcon(index)"
-        @mouseleave="isRemoveIconHidden = true"
-        > 
+      >
         <div 
-          class="result-images__remove-slot"
-          v-show="hoveredSlot === index && !isRemoveIconHidden"
-          @click="$emit('remove-slot', index)"
-        ></div>
-        <img 
-          :src="slot.imgSrc"
-          class="cloned-preview" 
-        />
+          class="slot"
+          :key="slot.id"
+          :class="[
+            { current: currentSlotNumber === index }, 
+            { filled: slot.text }
+          ]"
+          @click="chooseSlot(index)"
+
+          > 
+          <img 
+            v-if="slot.imgSrc"
+            :src="slot.imgSrc"
+            class="cloned-preview" 
+          />
+        </div>
+        <div class="button-wrapper">
+          <VButton 
+            class="remove-slot"
+            type="link-like"
+            v-show="slotsQuantity > 1"
+            @click="$emit('remove-slot', slot.id)"
+          >
+            delete
+          </VButton>
+        </div>
       </div>
       <div 
-        v-show="!isAddSlotHidden"
-        class="result-images__add-slot"
+        v-show="slotsQuantity < 10"
+        class="add-slot"
         title="add one more page"
       >
         <button 
           @click="addSlot"
-          class="result-images__add-slot-button"
+          class="add-slot-button"
         >
         </button>
       </div>
@@ -89,13 +96,13 @@ export default {
 </template>
 
 <style lang="scss">
-@use '../assets/colors';
-@use '../assets/breakpoints';
-@import '../assets/mixins';
-@import '../assets/global';
+@use '@/assets/colors';
+@use '@/assets/breakpoints';
+@import '@/assets/mixins';
+@import '@/assets/global';
 
 .result-images {
-  &__save-image-hint {
+  .save-image-hint {
     display: none;
     margin: 0 30px;
     padding: 20px 30px;
@@ -104,15 +111,19 @@ export default {
     border: 2px solid colors.$secondary;
     color: colors.$secondary-darker;
   }
-  &__carousel {
+  .carousel {
     display: flex;
     justify-content: right;
     gap: 11px;
     width: 100%;
     padding: 30px 0;
   }  
-  &__slot {
-    position: relative;
+  .slot-wrapper {
+    &:hover .remove-slot {
+      display: block;
+    }
+  }
+  .slot {
     width: 60px;
     aspect-ratio: var(--preview-aspect-ratio);
     cursor: pointer;
@@ -120,41 +131,38 @@ export default {
     &.current {
       @include light-shadow;
     }
+    &.filled {
+      border: 1px solid colors.$secondary-darker;
+    }
   }
-  &__remove-slot {
-    position: absolute;
-    width: 25px;
-    height: 25px;
-    margin-left: 88%;
-    border-radius: 50%;
+  .button-wrapper {
+    height: 20px;
+  }
+  .remove-slot {
+    display: none;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 5px;
+    font-size: 10px;
+    color: colors.$secondary;
+    text-decoration: none;
+    transition: color 0.5s, text-decoration 0.5s;
     cursor: pointer;
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      display: block;
-      width: 14px;
-      background-color: colors.$warning;
-      border-bottom: 3px solid colors.$warning;
-    }
-    &::before {
-      transform: rotate(-45deg); 
-    }
-    &::after {
-      transform: rotate(45deg); 
+    &:hover {
+      color: colors.$secondary-darker;
+      text-decoration: underline;
     }
   }
-  &__add-slot {
+  .add-slot {
     width: 60px;
     aspect-ratio: var(--preview-aspect-ratio);
   }
-  &__add-slot-button{
+  .add-slot-button{
     display: block;
     width: 60px;
     aspect-ratio: 1;
     margin: 0 auto;
     cursor: pointer;
-    border-radius: 50%;
     background-color: transparent;
     &::before,
     &::after {
@@ -163,11 +171,17 @@ export default {
       margin: 0 auto;
       width: 30px;
       border-bottom: 2px solid colors.$secondary;
+      transition: border-bottom 0.5s;
     }
-      &::before {
-        transform: rotate(-90deg) translateX(-2px) translateY(1px);
+    &::before {
+      transform: rotate(-90deg) translateX(-2px) translateY(1px);
+    }
+    &:hover {
+      &::before,
+      &::after {
+        border-bottom: 2px solid colors.$secondary-darker;
       }
-
+    }
   }
   .cloned-preview {
     display: block;
@@ -179,9 +193,12 @@ export default {
 
 @media #{breakpoints.$m-media} {
   .result-images {
-    &__carousel {
+    .carousel {
       flex-wrap: wrap;
       justify-content: center;
+    }
+    .add-slot {
+      order: -1;
     }
   }  
 }
@@ -189,7 +206,7 @@ export default {
 @media #{breakpoints.$s-media} {
   .result-images {
     order: -1;
-    &__save-image-hint {
+    .save-image-hint {
       display: block;
     }
   }

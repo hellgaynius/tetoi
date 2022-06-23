@@ -1,149 +1,295 @@
 <script>
-import Transformator from './components/Transformator.vue';
-import ResultImages from './components/ResultImages.vue';
-import Actions from './components/Actions.vue';
-import MarkdownHint from './components/MarkdownHint.vue';
-import Notification from './components/Notification.vue'
+import TextTransformator from '@/components/TextTransformator.vue';
+import ResultImages from '@/components/ResultImages.vue';
+import ProjectActions from '@/components/ProjectActions.vue';
+import MarkdownHint from '@/components/MarkdownHint.vue';
+import VNotification from '@/components/base/VNotification.vue'
+import browserStorage from '@/browserStorage/browserStorage.js'
+import apiMethods from '@/api/api.js';
+import { nanoid } from 'nanoid';
+
+const LOCAL_STORAGE_ITEM_NAME = 'localProject';
 
 export default {
   components: {
-    Notification,
-    Transformator,
+    VNotification,
+    TextTransformator,
     MarkdownHint,
     ResultImages,
-    Actions,
+    ProjectActions,
   },
-
-  props: ['isProjectPublished'],
 
   data() {
     return {
-      isButtonDisabled: true,
-      isProjectSaved: true,
+      isProjectSaved: false,
+      isProjectPublished: false,
+      isPublishButtonDisabled: true,
+      isResetButtonDisabled: true,
+      isSaveButtonDisabled: true,
+      isDeleteButtonDisabled: false,
       projectId: null,
-      isHintHidden: true,
-      isNotificationDisplayed: false,
-      notificationType: 'info',
-      notificationText: '',
-      isSmallScreen: window.matchMedia('max-width: 400px'),
+      isMarkdownHintHidden: true,
+      notification: {
+        isDisplayed: false,
+        type: 'info',
+        text: '',
+      },
       post: { 
         fullText: '', 
         slots: [
           {
             text: '',
-            imgSrc: './slot.png',
+            imgSrc: '',
+            id: nanoid(),
           }
         ],
       },
-      currentSlotId: 0,
+      currentSlotNumber: 0,
     }
   },
 
   computed: {
     isProjectFilled() {
       return this.post.fullText ||
-        this.post.slots.some(slot => slot.text)
+        this.post.slots.some(slot => slot.text) ? true : false;
     },
+  },
+
+  watch: {
+    isProjectFilled(newValue) {
+      this.isPublishButtonDisabled = !newValue;
+      this.isResetButtonDisabled = !newValue;
+    }
   },
 
   methods: {
     showNotification(type, text) {
-      this.isNotificationDisplayed = true;
-      this.notificationType = type;
-      this.notificationText = text;
+      this.notification.isDisplayed = true;
+      this.notification.type = type;
+      this.notification.text = text;
     },
 
-    saveSlotText(event) {
-      this.post.slots[this.currentSlotId].text = event.target.value;
+    saveText(textValue, targetContainer) {
+      if (targetContainer === 'slot') {
+        this.post.slots[this.currentSlotNumber].text = textValue;
+      } else {
+        this.post.fullText = textValue;
+      }
+
+      if (this.isProjectPublished) {
+        this.isSaveButtonDisabled = false;
+        this.isProjectSaved = false;
+      }
+
+      const paramsForBrowserStorageHandler = [
+        this.isProjectFilled, 
+        this.isProjectPublished, 
+        LOCAL_STORAGE_ITEM_NAME, 
+        this.post
+      ];
+
+      browserStorage.handle(paramsForBrowserStorageHandler);
     },
 
-    saveFullText(event) {
-      this.post.fullText = event.target.value;
+    changeCurrentSlotNumber(index) {
+      this.currentSlotNumber = index;
     },
 
-    changeCurrentSlotId(index) {
-      this.currentSlotId = index;
+    changeSlotImage(imgSrc, slotIndex) {
+      this.post.slots[slotIndex].imgSrc = imgSrc;
     },
 
-    changeSlotImage(imgSrc, slotId) {
-      this.post.slots[slotId].imgSrc = imgSrc;
+    removeSlot(id) {
+      const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
+
+      if (this.currentSlotNumber === deletedSlotIndex) {
+        this.currentSlotNumber = 0;
+      } else if (this.currentSlotNumber > deletedSlotIndex) {
+        this.currentSlotNumber -= 1;
+      };
+
+      this.post.slots =
+        this.post.slots.filter(slot => slot.id != id);
     },
 
-    removeSlot(index) {
-      this.post.slots.splice(index, 1);
-      console.log(this.currentSlotId)
+    publishProject() {
+      this.isPublishButtonDisabled = true;
+      this.isResetButtonDisabled = true;
+
+      apiMethods.publish(this.post)
+        .then(response => {
+          this.projectId = '/' + response.id;
+          this.isProjectPublished = true;
+          this.isProjectSaved = true;
+          this.isDeleteButtonDisabled = false,
+          browserStorage.reset();
+          window.history.replaceState({}, '', this.projectId);
+          this.showNotification('info', 
+            `Project was published successfully. <br>
+            It is now available via the link: <br> <br>
+            ${window.location}`);
+        })
+        .catch(error => {
+          this.isPublishButtonDisabled = false;
+          this.isResetButtonDisabled = false;
+          this.showNotification('warning', error);
+        });
+    },
+
+    updateProject() {
+      this.isSaveButtonDisabled = true;
+      this.isDeleteButtonDisabled = true;
+
+      apiMethods.update(this.post, this.projectId)
+        .then(() => {
+          this.isProjectSaved = true;
+          this.showNotification('info', `Updates were saved successfully`);
+          this.isDeleteButtonDisabled = false; 
+        })
+        .catch(error => {
+          this.isSaveButtonDisabled = false;
+          this.isDeleteButtonDisabled = false;
+          this.showNotification('warning', error);
+        });
+    },
+
+    deleteProject() {
+      this.isSaveButtonDisabled = true,
+      this.isDeleteButtonDisabled = true;
+
+      apiMethods.delete(this.projectId)
+        .then(() => {
+          window.history.replaceState({}, '', window.location.origin);
+          this.resetProject();
+          this.showNotification('info', `Project ${this.projectId} deleted`);
+          this.projectId = null;
+          this.isProjectPublished = false;
+        })
+        .catch(error => {
+          this.isDeleteButtonDisabled = false;
+          this.showNotification('warning', error);
+        })
     },
 
     resetProject() {
-      this.post.fullText = '';
-      this.currentSlotId = 0;
-      this.post.slots.splice(1);
-      this.post.slots[0].text = '';
-      this.post.slots[0].imgSrc = './slot.png';
+      browserStorage.reset();
+      this.currentSlotNumber = 0;
+      this.post = { 
+        fullText: '', 
+        slots: [
+          {
+            text: '',
+            imgSrc: '',
+            id: nanoid(),
+          },
+        ],
+      };
     },
+
+    fetchProject(projectId) {
+      return apiMethods.get(projectId)
+        .then(serverResponse => {
+          this.isProjectPublished = true;
+          this.showNotification('info', 'Successfuly loaded project from server');
+
+          return serverResponse;
+        })
+        .catch(error => {
+          window.history.replaceState({}, '', window.location.origin);
+          this.showNotification('warning', error);
+
+          return null;
+        })
+    },
+
+    async initProjectState() {
+      let serverStore = null;
+      let localStore = null;
+      this.projectId = window.location.pathname;
+
+      if (this.projectId.length > 1) {
+        serverStore = await this.fetchProject(this.projectId)
+      } 
+
+      if (!serverStore) {
+        localStore = browserStorage.fetch(LOCAL_STORAGE_ITEM_NAME);
+      }
+
+      const project = serverStore || localStore || null;
+
+      if (project) {
+        this.post = project;
+      }
+    },
+  },
+
+  created() {
+    this.initProjectState();
   },
 };
 </script>
 
 <template>
-  <Notification
-    v-show="isNotificationDisplayed"
-    :class="notificationType"
-    :notificationText="notificationText"
-    @close-notification="isNotificationDisplayed = false"
+  <VNotification
+    :notification="notification"
+    @close-notification="notification.isDisplayed = false"
   />
   <div class="app">
-    <h1 class="app__logo">tetoi</h1>
-    <main class="app__main">
-      <div 
+    <h1 class="logo">tetoi</h1>
+    <main class="main">
+      <div
         v-show="isProjectPublished"
-        class="app__project-status">
+        class="project-status"
+      >
         <span 
           v-if="isProjectSaved"
-          class="app__status-text app__status-text--saved"
+          class="status-text saved"
         >saved</span>
         <span 
           v-else
-          class="app__status-text app__status-text--unsaved">unsaved</span>
+          class="status-text unsaved">unsaved</span>
       </div>
-      <Transformator
-        :isHintHidden="isHintHidden"
-        :currentSlotId="currentSlotId"
+      <TextTransformator
+        :is-markdown-hint-hidden="isMarkdownHintHidden"
+        :current-slot-number="currentSlotNumber"
         :post="post"
-        :isButtonDisabled="isButtonDisabled"
-        @toggle-markdown-hint="isHintHidden = !isHintHidden"
-        @save-slot-text="saveSlotText"
-        @save-full-text="saveFullText"
+        @toggle-markdown-hint="isMarkdownHintHidden = !isMarkdownHintHidden"
+        @save-text="saveText"
         @change-slot-image="changeSlotImage"
-        @enable-button="isButtonDisabled = false"
-        @disable-button="isButtonDisabled = true"
       />
-      <MarkdownHint v-show="!isHintHidden"/>
+      <MarkdownHint v-show="!isMarkdownHintHidden"/>
       <ResultImages
-        :currentSlotId="currentSlotId"
+        :current-slot-number="currentSlotNumber"
         :slots="post.slots"
-        @change-current-slot-id="changeCurrentSlotId"
+        @change-current-slot-id="changeCurrentSlotNumber"
         @remove-slot="removeSlot"
       />
-      <Actions
-        :isProjectFilled="isProjectFilled"
+      <ProjectActions
+        :is-project-filled="isProjectFilled"
+        :is-project-published="isProjectPublished"
+        :is-publish-button-disabled="isPublishButtonDisabled"
+        :is-reset-button-disabled="isResetButtonDisabled"
+        :is-save-button-disabled="isSaveButtonDisabled"
+        :is-delete-button-disabled="isDeleteButtonDisabled"
+        @publish-project="publishProject"
         @reset-project="resetProject"
-        @show-notification="showNotification"
+        @update-project="updateProject"
+        @delete-project="deleteProject"
       />
     </main>
   </div>
 </template>
 
 <style lang="scss">
-@use './src/assets/colors';
-@use './src/assets/breakpoints';
-@import './src/assets/mixins';
-@import './src/assets/global';
+@use '@/assets/colors';
+@use '@/assets/breakpoints';
+@import '@/assets/mixins';
+@import '@/assets/global';
 
 .app {
   display: flex;
   flex-direction: column;
-  &__main {
+  .main {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -155,39 +301,28 @@ export default {
     border-radius: 20px;
     box-shadow: 10px 20px 70px colors.$app-shadow;
   }
-  &__logo {
+  .logo {
     position: absolute;
     left: 100px;
     font: bold small-caps 76px 'Marcellus SC', serif;
   }
-  &__project-status {
+  .project-status {
     text-align: right;
-    &.unsaved {
-      .app__status-text {
-        &--saved {
-          display: none;
-        }
-        &--unsaved {
-          display: inline;
-        }
-      }
-    }
   }
-  &__status-text {
+  .status-text {
     letter-spacing: 4px;
-    &--saved {
+    &.saved {
       color: colors.$secondary-active;
     }
-    &--unsaved {
-      display: none;
+    &.unsaved {
       color: colors.$secondary-darker;
     }
   }
-}
+}  
 
 @media #{breakpoints.$l-media} {
   .app {
-    &__logo {
+    .logo {
       position: static;
       min-width: 370px;
       padding-top: 30px;
@@ -199,13 +334,13 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .app {
-    &__main {
+    .main {
       width: 100%;
       min-width: 370px;
       padding: 40px 10px 80px 10px;
       box-shadow: none;
     }
-    &__project-status {
+    .project-status {
       padding: 20px;
     }
   }

@@ -1,71 +1,82 @@
 <script>
 export default {
+  props: {
+    active: Boolean,
+  },
+
   data() {
     return {
       rulesets: {
         headings: { 
+          label: 'Headings',
           title: 'headings',
           rules: [
-            { text: '# biggest' }, 
-            { text: '## big' },
-            { text: '### medium' },
-            { text: '#### small' },
-            { text: '##### smaller' },
-            { text: '###### the smallest' }
-          ]
+            '# biggest', 
+            '## big',
+            '### medium',
+            '#### small',
+            '##### smaller',
+            '###### the smallest',
+          ],
         },
         alignModes: { 
+          label: 'Align modes:',
           title: 'align-modes',
           rules: [
-            { text: '-=- center' },
-            { text: '--= right' }
-          ]
+            '-=- center',
+            '--= right',
+          ],
         },
         lists: { 
+          label: 'Lists:',
           title: 'lists',
           rules: [
-            { text: '- unordered <br> - list' },
-            { text: '1. ordered <br> 2. list' }
-          ]
+            '- unordered <br> - list',
+            '1. ordered <br> 2. list',
+          ],
         },
         misc: { 
+          label: 'Misc:',
           title: 'misc',
           rules: [
-            { text: '*italic*' },
-            { text: '**bold**' },
-            { text: '\\\ empty line' },
-            { text: '> blockquote' },
-            { text: '`code`' }
+            '*italic*',
+            '**bold**',
+            '\\\ empty line',
+            '> blockquote',
+            '`code`',
           ]
         },
         combinations: { 
+          label: 'Combinations:',
           title: 'combinations',
           rules: [
-            { text: '## **bold heading**' },
-            { text: '## -=- center heading' },
-            { text: '> - quoted <br> > - list' }
-          ]
-        }
-      }
+            '## **bold heading**',
+            '## -=- center heading',
+            '> - quoted <br> > - list',
+          ],
+        },
+      },
     };
   },
 }
 </script>
 
 <template>
-  <div class="hint">
+  <div 
+    class="markdown-hint"
+  >
     <div
       v-for="ruleset in rulesets"
-      :class="['hint__rules', 'hint__rules--' + ruleset.title]"
+      :class="ruleset.title"
     >
       <h4> 
-        {{ ruleset.title }}
+        {{ ruleset.label }}
       </h4>
-      <ul>
+      <ul class="ruleset">
         <li 
-          class="hint__rule"
+          class="rule"
           v-for="rule in ruleset.rules"
-          v-html="rule.text"
+          v-html="rule"
         >
         </li>
       </ul>
@@ -74,13 +85,14 @@ export default {
 </template>
 
 <style lang="scss">
-@use '../assets/colors';
-@use '../assets/breakpoints';
-@import '../assets/mixins';
-@import '../assets/global';
+@use '@/assets/colors';
+@use '@/assets/breakpoints';
+@import '@/assets/mixins';
+@import '@/assets/global';
 
-.hint {
+.markdown-hint {
   display: grid;
+  transition: display 2s;
   grid-template: 
     "a b c e" auto
     "a d c e";
@@ -92,36 +104,34 @@ export default {
   color: colors.$secondary-darker;
   background-color: colors.$markdown-background;
   border-radius: 10px;
-  ul {
+  .ruleset {
     list-style-type: none;
     margin: 0;
     padding: 0;
   }
-  &__rules {
-    &--headings {
-      grid-area: a;
-    }
-    &--align-modes {
-      grid-area: b;
-    }
-    &--lists {
-      grid-area: d;
-    }
-    &--misc {
-      grid-area: c;
-    }
-    &--combinations {
-      grid-area: e;
-    }
-  }
-  &__rule {
+  .rule {
     padding: 7px;
     font-size: 12px;
+  }
+  .headings {
+    grid-area: a;
+  }
+  .align-modes {
+    grid-area: b;
+  }
+  .lists {
+    grid-area: d;
+  }
+  .misc {
+    grid-area: c;
+  }
+  .combinations {
+    grid-area: e;
   }
 }
 
 @media #{breakpoints.$s-media} {
-  .hint {
+  .markdown-hint {
     grid-template: 
       "a b"
       "a b"
@@ -133,5 +143,4 @@ export default {
     gap: 20px;  
   }
 }
-
 </style>

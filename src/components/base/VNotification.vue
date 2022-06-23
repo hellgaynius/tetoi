@@ -1,57 +1,74 @@
 <script>
+    const NOTIFICATION_FADE_DELAY = 10000;
+    const NOTIFICATION_REMOVE_DELAY = 13000;
+
   export default {
-    props: ['notificationText'],
+    props: {
+      notification: Object,
+    },
+
     emits: ['close-notification'],
 
     data() {
       return {
-        NOTIFICATION_FADE_DELAY: 10000,
-        NOTIFICATION_REMOVE_DELAY: 13000,
         isRemoved: false,
+        removeTimeoutId: null,
+        fadeTimeoutId: null,
       }
     },
 
     watch: {
-      notificationText() {
-        this.closeWithDelay();
+      notification: {
+        handler() {
+          this.stopRemoval();
+          this.removeWithDelay();
+        },
+
+        deep: true,
       },
     },
 
     methods: {
-      stopTimerOfRemoval() {
-        this.isRemoved = true;
+      stopRemoval() {
+        this.isRemoved = false;
         clearTimeout(this.removeTimeoutId);
+        clearTimeout(this.fadeTimeoutId);
       },
 
-      closeWithDelay() {
-        setTimeout(() => {
-          this.isRemoved = true;
-        }, this.NOTIFICATION_FADE_DELAY);
+      removeWithDelay() {
+        this.fadeTimeoutId =
+          setTimeout(() => {
+            this.isRemoved = true;
+          }, 
+          NOTIFICATION_FADE_DELAY,
+        );
 
         this.removeTimeoutId = 
           setTimeout(() => {
-              this.$emit('close-notification');
-            }, 
-            this.NOTIFICATION_REMOVE_DELAY,
-          );
+            this.isRemoved = false;
+            this.$emit('close-notification');
+          }, 
+          NOTIFICATION_REMOVE_DELAY,
+        );
       },
     },
-
-    mounted() {
-    }
   };
 </script>
 
 <template>
   <div 
     class="notification"
-    :class="{ removed: isRemoved }"
-    @mouseenter="stopTimerOfRemoval"
-    @mouseleave="closeWithDelay"
+    :class="[notification.type, { removed: isRemoved }]"
+    v-show="notification.isDisplayed"
+    @mouseenter="stopRemoval"
+    @mouseleave="removeWithDelay"
   >
-    <span class="notification__text">{{ notificationText }}</span>
+    <span 
+      class="text"
+      v-html="notification.text"
+    ></span>
     <div 
-      class="notification__close-icon"
+      class="close-icon"
       @click="$emit('close-notification')"
     >
     </div>
@@ -59,10 +76,10 @@
 </template>
 
 <style lang="scss">
-@use '../assets/colors';
-@use '../assets/breakpoints';
-@import '../assets/mixins';
-@import '../assets/global';
+@use '@/assets/colors';
+@use '@/assets/breakpoints';
+@import '@/assets/mixins';
+@import '@/assets/global';
 
 .notification {
   position: fixed;
@@ -87,7 +104,7 @@
     box-shadow: 3px 3px 0 colors.$warning;
     border: 2px solid colors.$warning;
     color: colors.$warning;
-    & .notification__close-icon {
+    & .close-icon {
       border: 1px solid colors.$warning;
       &::before {
         border-top: 3px solid colors.$warning;
@@ -101,7 +118,7 @@
     box-shadow: 3px 3px 0 colors.$info;
     border: 2px solid colors.$info;
     color: colors.$info;
-    & .notification__close-icon {
+    & .close-icon {
       border: 1px solid colors.$info;
       &::before {
         border-top: 3px solid colors.$info;
@@ -111,7 +128,7 @@
       }
     }  
   }
-  &__close-icon {
+  .close-icon {
     position: fixed;
     top: 20px;
     right: 20px;
