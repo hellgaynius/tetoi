@@ -1,6 +1,5 @@
 <script>
-    const NOTIFICATION_FADE_DELAY = 10000;
-    const NOTIFICATION_REMOVE_DELAY = 13000;
+  const NOTIFICATION_REMOVE_DELAY = 10000;
 
   export default {
     props: {
@@ -11,9 +10,7 @@
 
     data() {
       return {
-        isRemoved: false,
         removeTimeoutId: null,
-        fadeTimeoutId: null,
       }
     },
 
@@ -23,29 +20,21 @@
           this.stopRemoval();
           this.removeWithDelay();
         },
+      }
+    },
 
-        deep: true,
-      },
+    mounted() {
+      this.removeWithDelay();
     },
 
     methods: {
       stopRemoval() {
-        this.isRemoved = false;
         clearTimeout(this.removeTimeoutId);
-        clearTimeout(this.fadeTimeoutId);
       },
 
       removeWithDelay() {
-        this.fadeTimeoutId =
-          setTimeout(() => {
-            this.isRemoved = true;
-          }, 
-          NOTIFICATION_FADE_DELAY,
-        );
-
         this.removeTimeoutId = 
           setTimeout(() => {
-            this.isRemoved = false;
             this.$emit('close-notification');
           }, 
           NOTIFICATION_REMOVE_DELAY,
@@ -56,23 +45,25 @@
 </script>
 
 <template>
-  <div 
-    class="notification"
-    :class="[notification.type, { removed: isRemoved }]"
-    v-show="notification.isDisplayed"
-    @mouseenter="stopRemoval"
-    @mouseleave="removeWithDelay"
-  >
-    <span 
-      class="text"
-      v-html="notification.text"
-    ></span>
+  <Transition>
     <div 
-      class="close-icon"
-      @click="$emit('close-notification')"
+      class="notification"
+      :class="notification.type"
+      v-show="notification.show"
+      @mouseenter="stopRemoval"
+      @mouseleave="removeWithDelay"
     >
+      <span 
+        class="text"
+        v-html="notification.text"
+      ></span>
+      <div 
+        class="close-icon"
+        @click="$emit('close-notification')"
+      >
+      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style lang="scss">
@@ -93,6 +84,10 @@
   text-align: center;
   overflow-wrap: break-word;
   transition: opacity 3s;
+  &.v-leave-to {
+    opacity: 0;
+    transition: opacity 3s ease;
+  }
   &.removed {
     opacity: 0;
   }

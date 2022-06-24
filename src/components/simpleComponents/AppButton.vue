@@ -1,21 +1,22 @@
 <script>
 export default {
   props: {
-    text: String,
-    type: String,
-    size: String,
-    action: String,
+    buttonLike: Boolean,
+    linkLike: Boolean,
+    big: Boolean,
+    markdown: Boolean,
   }
 }
 </script>
 
 <template>
   <button 
-    class="v-button"
+    class="app-button"
     :class="[
-      type, 
-      size ? size : null, 
-      action ? action : null 
+      { 'button-like': buttonLike },
+      { 'link-like': linkLike},
+      { big }, 
+      { markdown }, 
     ]"
   >
     <slot />
@@ -28,18 +29,27 @@ export default {
 @import '@/assets/mixins';
 @import '@/assets/global';
 
-.v-button {
+.app-button {
   display: block;
   min-width: 100px;
   text-align: center;
   font-size: 12px;
   border: none;
-  color: colors.$secondary-darker;
   letter-spacing: 1px;
   &.button-like {
     padding: 10px 15px;
     border-radius: 5px;
-    @include active-button;
+    background-color: colors.$active-button-background;
+    color: colors.$active-button-text;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    @include light-shadow;
+    &:hover {
+      background-color: colors.$active-button-hover;
+    }
+    &:active {
+      background-color: colors.$active-button-active;
+    }
     &:disabled {
       background-color: colors.$main;
       @include inactive-button;
@@ -47,11 +57,15 @@ export default {
   }
   &.link-like {
     text-align: right;
-    background-color: transparent;
     text-decoration: underline;
+    color: colors.$secondary-darker;
+    background-color: transparent;
+    transition: color 0.2s;
     cursor: pointer;
+    &:hover {
+      color: colors.$secondary;
+    }
     &:disabled {
-      text-decoration: none;
       @include inactive-button;
     }
   }
@@ -60,24 +74,11 @@ export default {
     padding: 15px 10px;
     font-size: 16px;
   }
-  &.publish,
-  &.save {
-    grid-column-start: 2;
-  }
-  &.reset,
-  &.delete {
-    grid-column-start: 3;
-  }
 }  
 
 @media #{breakpoints.$s-media} {
   .markdown {
     margin: 0 auto;
-  }
-
-  .reset,
-  .delete {
-    text-align: center;
   }
 }
 </style>

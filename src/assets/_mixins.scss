@@ -12,20 +12,16 @@
 
 @mixin inactive-button {
   color: colors.$secondary-darker;
-  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
   box-shadow: none;
+  text-decoration: none;
+  cursor: default;
 }
 
-@mixin active-button {
-  background-color: colors.$active-button-background;
-  color: colors.$active-button-text;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
-  @include light-shadow;
-  &:hover {
-    background-color: colors.$active-button-hover;
-  }
-  &:active {
-    background-color: colors.$active-button-active;
-  }
+@mixin active-button-like {
+
+}
+
+@mixin active-link-like {
+
 }

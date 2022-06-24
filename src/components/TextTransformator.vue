@@ -1,5 +1,5 @@
 <script>
-import VButton from '@/components/base/VButton.vue';
+import AppButton from '@/components/simpleComponents/AppButton.vue';
 import markdown from '../processes/markdown.js';
 import imageCreation from '../processes/imageCreation.js';
 import { debounce } from 'throttle-debounce';
@@ -11,7 +11,7 @@ const COPIED_REMOVE_DELAY = 2000;
 
 export default {
   components: {
-    VButton,
+    AppButton,
   },
 
   props: {
@@ -45,7 +45,7 @@ export default {
     },
 
     isPreviewButtonDisabled() {
-      return !this.renderedPreview ? true : false;
+      return !this.renderedPreview;
     },
   },
 
@@ -57,16 +57,21 @@ export default {
     },
 
     currentTextValue() {
-      if (!this.post.slots[this.currentSlotNumber].imgSrc) {
-        this.renderText()
+      if (this.post.slots[this.currentSlotNumber].imgSrc) {
+        this.renderTextDebounced()
       } else {
-        this.renderTextDebounced();
+        this.renderText();
       }
     },
 
     currentSlotNumber() {
       this.renderText();
     },
+  },
+
+  mounted() {
+    imageCreation.init(this.$refs.preview);
+    this.renderText();
   },
 
   methods: {
@@ -91,10 +96,6 @@ export default {
       }, COPIED_REMOVE_DELAY);
     },
   },
-
-  mounted() {
-    imageCreation.init(this.$refs.preview);
-  }
 }
 </script>
 
@@ -128,15 +129,15 @@ export default {
         </label>
       </div>
       <div class="buttons">
-        <VButton 
-          class="markdown"
-          type="link-like"
+        <AppButton 
+          linkLike
+          markdown
           @click="$emit('toggle-markdown-hint')"
         >
           <span v-if="isMarkdownHintHidden">show </span>
           <span v-else>hide </span>
           markdown instructions
-        </VButton>
+        </AppButton>
       </div>
     </div>
     <div class="preview-block">
@@ -156,20 +157,20 @@ export default {
         </div>
       </div>
       <div class="buttons">
-        <VButton 
+        <AppButton 
           :disabled="isPreviewButtonDisabled"
-          type="button-like"
+          buttonLike
           @click="downloadImage"
         >
           download as jpg
-        </VButton>
-        <VButton
+        </AppButton>
+        <AppButton
           :disabled="isPreviewButtonDisabled"
-          type="button-like"
+          buttonLike
           @click="copyImage"
         > 
           copy as png
-        </VButton>
+        </AppButton>
       </div>
       <Transition>
         <div 
@@ -237,7 +238,7 @@ export default {
     padding: 10px;
     resize: none;
     border-radius: unset;
-    transition: box-shadow 0.3s;
+    transition: box-shadow 0.2s;
     @include solid-border;
     &:focus-visible {
       @include light-shadow;

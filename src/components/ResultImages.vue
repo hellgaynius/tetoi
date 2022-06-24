@@ -1,10 +1,10 @@
 <script>
-import VButton from '@/components/base/VButton.vue';
+import AppButton from '@/components/simpleComponents/AppButton.vue';
 import { nanoid } from 'nanoid';
 
 export default {
   components: {
-    VButton,
+    AppButton,
   },
 
   props: {
@@ -61,8 +61,7 @@ export default {
             { filled: slot.text }
           ]"
           @click="chooseSlot(index)"
-
-          > 
+        > 
           <img 
             v-if="slot.imgSrc"
             :src="slot.imgSrc"
@@ -70,14 +69,14 @@ export default {
           />
         </div>
         <div class="button-wrapper">
-          <VButton 
+          <AppButton 
             class="remove-slot"
-            type="link-like"
+            linkLike
             v-show="slotsQuantity > 1"
             @click="$emit('remove-slot', slot.id)"
           >
             delete
-          </VButton>
+          </AppButton>
         </div>
       </div>
       <div 
@@ -88,8 +87,7 @@ export default {
         <button 
           @click="addSlot"
           class="add-slot-button"
-        >
-        </button>
+        ></button>
       </div>
     </div>
   </div>
@@ -136,28 +134,20 @@ export default {
     }
   }
   .button-wrapper {
-    height: 20px;
+    height: 40px;
   }
   .remove-slot {
     display: none;
     min-width: 0;
     margin: 0 auto;
-    padding: 5px;
+    padding: 15px 0px;
     font-size: 10px;
-    color: colors.$secondary;
-    text-decoration: none;
-    transition: color 0.5s, text-decoration 0.5s;
-    cursor: pointer;
-    &:hover {
-      color: colors.$secondary-darker;
-      text-decoration: underline;
-    }
   }
   .add-slot {
     width: 60px;
     aspect-ratio: var(--preview-aspect-ratio);
   }
-  .add-slot-button{
+  .add-slot-button {
     display: block;
     width: 60px;
     aspect-ratio: 1;
@@ -171,7 +161,7 @@ export default {
       margin: 0 auto;
       width: 30px;
       border-bottom: 2px solid colors.$secondary;
-      transition: border-bottom 0.5s;
+      transition: border-bottom 0.2s;
     }
     &::before {
       transform: rotate(-90deg) translateX(-2px) translateY(1px);

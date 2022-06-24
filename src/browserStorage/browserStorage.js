@@ -3,7 +3,7 @@ export default {
     localStorage.clear();
   },
 
-  handle([ isProjectFilled, isProjectPublished, itemName, post ]) {        
+  handle(isProjectFilled, isProjectPublished, itemName, post) {        
     if (!isProjectFilled) {
       this.reset();
     } else if (isProjectPublished) {

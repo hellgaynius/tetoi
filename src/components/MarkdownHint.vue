@@ -9,7 +9,7 @@ export default {
       rulesets: {
         headings: { 
           label: 'Headings',
-          title: 'headings',
+          name: 'headings',
           rules: [
             '# biggest', 
             '## big',
@@ -21,7 +21,7 @@ export default {
         },
         alignModes: { 
           label: 'Align modes:',
-          title: 'align-modes',
+          name: 'align-modes',
           rules: [
             '-=- center',
             '--= right',
@@ -29,7 +29,7 @@ export default {
         },
         lists: { 
           label: 'Lists:',
-          title: 'lists',
+          name: 'lists',
           rules: [
             '- unordered <br> - list',
             '1. ordered <br> 2. list',
@@ -37,7 +37,7 @@ export default {
         },
         misc: { 
           label: 'Misc:',
-          title: 'misc',
+          name: 'misc',
           rules: [
             '*italic*',
             '**bold**',
@@ -48,7 +48,7 @@ export default {
         },
         combinations: { 
           label: 'Combinations:',
-          title: 'combinations',
+          name: 'combinations',
           rules: [
             '## **bold heading**',
             '## -=- center heading',
@@ -62,12 +62,10 @@ export default {
 </script>
 
 <template>
-  <div 
-    class="markdown-hint"
-  >
+  <div class="markdown-hint">
     <div
       v-for="ruleset in rulesets"
-      :class="ruleset.title"
+      :class="ruleset.name"
     >
       <h4> 
         {{ ruleset.label }}
@@ -77,8 +75,7 @@ export default {
           class="rule"
           v-for="rule in ruleset.rules"
           v-html="rule"
-        >
-        </li>
+        ></li>
       </ul>
     </div>
   </div>
@@ -92,7 +89,6 @@ export default {
 
 .markdown-hint {
   display: grid;
-  transition: display 2s;
   grid-template: 
     "a b c e" auto
     "a d c e";
