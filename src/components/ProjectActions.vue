@@ -20,7 +20,7 @@ export default {
     'set-project-id',
     'toggle-published-text-status', 
     'toggle-publish-status',
-    'set-initial-post', 
+    'reset-project', 
     'show-notification'
   ],
 
@@ -113,7 +113,7 @@ export default {
 
     resetProject() {
       browserStorage.reset();
-      this.$emit('set-initial-post');
+      this.$emit('reset-project');
     },
   },
 }

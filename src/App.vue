@@ -30,24 +30,15 @@ export default {
         type: 'info',
         text: '',
       },
-      post: { 
-        fullText: '', 
-        slots: [
-          {
-            text: '',
-            imgSrc: '',
-            id: nanoid(),
-          },
-        ],
-      },
+      post: null,
       currentSlotNumber: 0,
     }
   },
 
   computed: {
     isProjectFilled() {
-      return !!(this.post.fullText ||
-        this.post.slots.some(slot => slot.text));
+      return !!(this.post?.fullText ||
+        this.post?.slots.some(slot => slot.text));
     },
   },
 
@@ -75,7 +66,10 @@ export default {
           },
         ],
       };
+    },
 
+    resetProject() {
+      this.setInitialPost(),
       this.currentSlotNumber = 0;
     },
 
@@ -170,7 +164,9 @@ export default {
 
       if (project) {
         this.post = project;
-      }
+      } else {
+        this.setInitialPost();
+      };
     },
   },
 };
@@ -220,7 +216,7 @@ export default {
         @set-project-id="setProjectId"
         @toggle-published-text-status="togglePublishedTextStatus"
         @toggle-publish-status="togglePublishStatus"
-        @set-initial-post="setInitialPost"
+        @reset-project="resetProject"
         @show-notification="showNotification"
       />
     </main>
