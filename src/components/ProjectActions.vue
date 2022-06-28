@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import browserStorage from '@/browserStorage/browserStorage.js'
-import apiMethods from '@/api/api.js';
+import { browserStorage } from '@/browserStorage/browserStorage.js'
+import { projectApi } from '@/api/api.js';
 
 export default {
   components: {
@@ -26,64 +26,91 @@ export default {
     'show-notification',
   ],
 
+  computed: {
+    isLocalProjectButtonDisabled() {
+      return this.isProjectPublished || !this.isProjectFilled || this.isRequestOngoing;
+    },
+
+    isSaveButtonDisabled() {
+      return this.isProjectSaved || this.isRequestOngoing;
+    },
+  },
+
   methods: {
     publishProject() {
       this.$emit('change-request-status', true);
 
-      apiMethods.publish(this.post)
+      projectApi.publish(this.post)
         .then(response => {
-          this.$emit('change-request-status', false);
           this.$emit('set-project-id', response.id);
-          this.$emit('toggle-publish-status');
-          this.$emit('toggle-save-status');
+          this.$emit('toggle-publish-status', true);
+          this.$emit('toggle-save-status', true);
           browserStorage.reset();
           window.history.replaceState({}, '', response.id);
-          this.$emit(
-            'show-notification', 
-            'info', 
-            `Project was published successfully. <br>
+          this.$emit('show-notification', {
+              type: 'info',
+              text: `Project was published successfully. <br>
             It is now available via the link: <br> <br>
             ${window.location}`,
-          );
+            });
         })
         .catch(error => {
+          this.$emit('show-notification', {
+              type: 'warning',
+              text: error,
+            });
+        })
+        .finally(() => {
           this.$emit('change-request-status', false);
-          this.$emit('show-notification', 'warning', error);
         });
     },
 
     updateProject() {
       this.$emit('change-request-status', true);
 
-      apiMethods.update(this.post, this.projectId)
+      projectApi.update(this.post, this.projectId)
         .then(() => {
-          this.$emit('change-request-status', false);
-          this.$emit('toggle-save-status');
-          this.$emit('show-notification', 'info', `Updates were saved successfully`);
+          this.$emit('toggle-save-status', true);
+          this.$emit('show-notification', {
+              type: 'info',
+              text: `Updates were saved successfully`,
+            });
         })
         .catch(error => {
+          this.$emit('show-notification', {
+              type: 'warning',
+              text: error,
+            });
+        })
+        .finally(() => {
           this.$emit('change-request-status', false);
-          this.$emit('show-notification', 'warning', error);
         });
     },
 
     deleteProject() {
       this.$emit('change-request-status', true);
 
-      apiMethods.delete(this.projectId)
+      projectApi.delete(this.projectId)
         .then(() => {
-          this.$emit('change-request-status', false);
           window.history.replaceState({}, '', window.location.origin);
           this.resetProject();
-          this.$emit('show-notification', 'info', `Project ${this.projectId} deleted`);
+          this.$emit('show-notification', {
+              type: 'info',
+              text: `Project ${this.projectId} deleted`,
+            });
           this.$emit('set-project-id', null);
-          this.$emit('toggle-save-status');
-          this.$emit('toggle-publish-status');
+          this.$emit('toggle-save-status', false);
+          this.$emit('toggle-publish-status', false);
         })
         .catch(error => {
-          this.$emit('change-request-status', false);
-          this.$emit('show-notification', 'warning', error);
+          this.$emit('show-notification', {
+              type: 'warning',
+              text: error,
+            });
         })
+        .finally(() => {
+          this.$emit('change-request-status', false);
+        });
     },
 
     resetProject() {
@@ -101,7 +128,7 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectPublished || !isProjectFilled || isRequestOngoing"
+            :disabled="isLocalProjectButtonDisabled"
             button-like
             big
             @click="publishProject"
@@ -112,7 +139,7 @@ export default {
         <div class="third-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectPublished || !isProjectFilled || isRequestOngoing"
+            :disabled="isLocalProjectButtonDisabled"
             link-like
             @click="resetProject"
           >
@@ -127,7 +154,7 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectSaved || isRequestOngoing"
+            :disabled="isSaveButtonDisabled"
             button-like
             big
             @click="updateProject"

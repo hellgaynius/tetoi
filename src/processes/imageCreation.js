@@ -1,6 +1,6 @@
 import domtoimage from 'dom-to-image';
 
-export default {
+export const imageCreation = {
   imageOptions: {},
 
   init(preview) {

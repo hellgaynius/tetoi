@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import markdownItAlign from 'markdown-it-align';
 
-export default {
+export const markdown = {
   markdownLib: null,
 
   init() {

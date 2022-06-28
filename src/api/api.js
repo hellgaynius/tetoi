@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const PATH = import.meta.env.VITE_BASE_API_URL;
 
-export default {
+export const projectApi = {
   publish(storage) {
     return decorateResponse(axios.post(PATH + '/', storage));
   },

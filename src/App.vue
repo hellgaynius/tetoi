@@ -4,11 +4,13 @@ import ResultImages from '@/components/ResultImages.vue';
 import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
 import AppNotification from '@/components/simpleComponents/AppNotification.vue'
-import browserStorage from '@/browserStorage/browserStorage.js'
-import apiMethods from '@/api/api.js';
+import { browserStorage } from '@/browserStorage/browserStorage.js'
+import { projectApi } from '@/api/api.js';
 import { nanoid } from 'nanoid';
 
 export default {
+  LOCAL_STORAGE_ITEM_NAME: 'localProject',
+
   components: {
     AppNotification,
     TextTransformator,
@@ -17,11 +19,9 @@ export default {
     ProjectActions,
   },
 
-  LOCAL_STORAGE_ITEM_NAME: 'localProject',
-
   data() {
     return {
-      isRequestOngoing: true,
+      isRequestOngoing: false,
       isProjectSaved: false,
       isProjectPublished: false,
       isProjectLoaded: false,
@@ -34,7 +34,7 @@ export default {
       },
       post: {},
       images: {},
-      currentSlotNumber: 0,
+      currentSlotIndex: 0,
     }
   },
 
@@ -64,22 +64,27 @@ export default {
     },
 
     async initProjectState() {
-      let project = null;
+      let localProject = null;
+      let serverProject = null;
 
       this.projectId = window.location.pathname;
 
       if (this.projectId.length > 1) {
-        project = await this.fetchProject(this.projectId);
+        serverProject = await this.fetchProject(this.projectId);
       } 
 
-      if (!project) {
+      if (!serverProject) {
         this.projectId = null;
-        project = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
+        localProject = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
 
-        this.showNotification('info', 
-          `Project is saved locally for this browser. <br>
-          To have access from everywhere, publish your project.`)
+        this.showNotification({
+          type: 'info',
+          text: `Project is saved locally for this browser. <br>
+            To have access from everywhere, publish your project.`,
+        })
       };
+
+      const project = serverProject || localProject;
 
       if (project) {
         this.post = project;
@@ -91,25 +96,32 @@ export default {
     fetchProject(projectId) {
       this.isRequestOngoing = true;
 
-      return apiMethods.get(projectId)
+      return projectApi.get(projectId)
         .then(serverResponse => {
-          this.isRequestOngoing = false;
           this.isProjectPublished = true;
           this.isProjectSaved = true;
-          this.showNotification('info', 'Successfuly loaded project from server');
+          this.showNotification({
+            type: 'info',
+            text: 'Successfuly loaded project from server',
+          });
 
           return serverResponse;
         })
         .catch(error => {
-          this.isRequestOngoing = false;
           window.history.replaceState({}, '', window.location.origin);
-          this.showNotification('warning', error);
+          this.showNotification({
+            type: 'warning',
+            text: error,
+          });
 
           return null;
         })
+        .finally(() => {
+          this.isRequestOngoing = false;
+        });
     },
 
-    showNotification(type, text) {
+    showNotification({ type, text }) {
       this.notification = {
         show: true,
         type: type,
@@ -123,7 +135,7 @@ export default {
 
     saveText(textValue, targetContainer) {
       if (targetContainer === 'slot') {
-        this.post.slots[this.currentSlotNumber].text = textValue;
+        this.post.slots[this.currentSlotIndex].text = textValue;
       } else {
         this.post.fullText = textValue;
       }
@@ -144,21 +156,21 @@ export default {
       this.isMarkdownHintHidden = !this.isMarkdownHintHidden;
     },
 
-    changeCurrentSlotNumber(index) {
-      this.currentSlotNumber = index;
+    changeCurrentSlotIndex(index) {
+      this.currentSlotIndex = index;
     },
 
-    changeSlotImage(imgSrc, slotId) {
+    changeSlotImage({ imgSrc, slotId }) {
       this.images[slotId] = imgSrc;
     },
 
     removeSlot(id) {
       const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
 
-      if (this.currentSlotNumber === deletedSlotIndex) {
-        this.currentSlotNumber = 0;
-      } else if (this.currentSlotNumber > deletedSlotIndex) {
-        this.currentSlotNumber -= 1;
+      if (this.currentSlotIndex === deletedSlotIndex) {
+        this.currentSlotIndex = 0;
+      } else if (this.currentSlotIndex > deletedSlotIndex) {
+        this.currentSlotIndex--;
       };
 
       this.post.slots.splice(deletedSlotIndex, 1);
@@ -168,21 +180,21 @@ export default {
       this.projectId = '/' + id;
     },
 
-    changeRequestStatus(newValue) {
-      this.isRequestOngoing = newValue;
+    changeRequestStatus(status) {
+      this.isRequestOngoing = status;
     },
 
-    toggleSaveStatus() {
-      this.isProjectSaved = !this.isProjectSaved;
+    toggleSaveStatus(status) {
+      this.isProjectSaved = status;
     },
 
-    togglePublishStatus() {
-      this.isProjectPublished = !this.isProjectPublished;
+    togglePublishStatus(status) {
+      this.isProjectPublished = status;
     },
 
     resetProject() {
       this.setInitialPost(),
-      this.currentSlotNumber = 0;
+      this.currentSlotIndex = 0;
       this.images = [];
     },
   },
@@ -217,10 +229,9 @@ export default {
       <TextTransformator
         :isDisabled="isRequestOngoing"
         :is-project-loaded="isProjectLoaded"
-        :is-project-published="isProjectPublished"
         :is-project-filled="isProjectFilled"
         :is-markdown-hint-hidden="isMarkdownHintHidden"
-        :current-slot-number="currentSlotNumber"
+        :current-slot-index="currentSlotIndex"
         :post="post"
         @toggle-markdown-hint="toggleMarkdownHint"
         @save-text="saveText"
@@ -228,15 +239,16 @@ export default {
       />
       <MarkdownHint v-show="!isMarkdownHintHidden"/>
       <ResultImages
-        :current-slot-number="currentSlotNumber"
+        :current-slot-index="currentSlotIndex"
         :images="images"
         :slots="post.slots"
-        @change-current-slot-id="changeCurrentSlotNumber"
+        @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
       <ProjectActions
         :post="post"
         :projectId="projectId"
+        :is-request-ongoing="isRequestOngoing"
         :is-project-filled="isProjectFilled"
         :is-project-published="isProjectPublished"
         :is-project-saved="isProjectSaved"

@@ -10,11 +10,11 @@ export default {
   props: {
     slots: Object,
     images: Object,
-    currentSlotNumber: Number,
+    currentSlotIndex: Number,
   },
 
   emits: [
-    'change-current-slot-id', 
+    'change-current-slot-index', 
     'remove-slot',
   ],
 
@@ -29,7 +29,7 @@ export default {
     },
 
     chooseSlot(index) {
-      this.$emit('change-current-slot-id', index);
+      this.$emit('change-current-slot-index', index);
     }
   },
 }
@@ -49,16 +49,16 @@ export default {
         <div 
           class="slot"
           :key="slot.id"
-          :class="[
-            { current: currentSlotNumber === index }, 
-            { filled: slot.text }
-          ]"
+          :class="{
+            current: currentSlotIndex === index, 
+            filled: !!slot.text,
+          }"
           @click="chooseSlot(index)"
         > 
           <img 
             v-if="images[slot.id]"
             :src="images[slot.id]"
-            class="cloned-preview" 
+            class="preview" 
           />
         </div>
         <div class="button-wrapper">
@@ -166,7 +166,7 @@ export default {
       }
     }
   }
-  .cloned-preview {
+  .preview {
     display: block;
     width: 50px;
     aspect-ratio: var(--preview-aspect-ratio);

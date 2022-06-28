@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import markdown from '@/processes/markdown.js';
-import imageCreation from '@/processes/imageCreation.js';
+import { markdown } from '@/processes/markdown.js';
+import { imageCreation } from '@/processes/imageCreation.js';
 import { debounce } from 'throttle-debounce';
 
 markdown.init();
@@ -9,18 +9,18 @@ markdown.init();
 const RENDER_TEXT_DELAY = 1000;
 
 export default {
+  COPIED_REMOVE_DELAY: 2000,
+
   components: {
     AppButton,
   },
-
-  COPIED_REMOVE_DELAY: 2000,
 
   props: {
     isDisabled: Boolean,
     isProjectLoaded: Boolean,
     isProjectFilled: Boolean,
     isMarkdownHintHidden: Boolean,
-    currentSlotNumber: Number,
+    currentSlotIndex: Number,
     post: Object,
   },
 
@@ -39,9 +39,17 @@ export default {
     }
   },
 
+  computed: {
+    isPreviewButtonDisabled() {
+      return !this.renderedPreview || !this.isProjectFilled;
+    },
+  },
+
   watch: {
-    currentSlotNumber() {
-      this.renderText(this.currentSlotNumber);
+    currentSlotIndex() {
+      if (this.post.slots[this.currentSlotIndex].text) {
+        this.renderText(this.currentSlotIndex);
+      };
     },
 
     isProjectLoaded(newValue) {
@@ -56,32 +64,49 @@ export default {
   },
 
   methods: {
-    saveText(event) {
+    toggleMarkdownHint() {
+      this.$emit('toggle-markdown-hint');
+    },
+
+    saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
-      this.renderTextDebounced()
+      this.convertSlotTextDebounced();
+    },
+
+    saveFullText(event) {
+      this.$emit('save-text', event.target.value);
     },
 
     async createInitialImages() {
-      for (let i = this.post.slots.length - 1; i >= 0; i--) {
+      for (let i = 0; i < this.post.slots.length; i++) {
         if (this.post.slots[i].text) {
-          await this.renderText(i);
+          await this.convertSlotText(i);
         }
       };
+
+      this.renderPreview(this.currentSlotIndex);
     },
 
-    async saveImage(slotNumber) {
-      const imageItem = await imageCreation.generateImageUrl();
-
-      this.$emit('change-slot-image', imageItem, [this.post.slots[slotNumber].id]);
+    renderPreview(slotIndex) {
+      this.renderedPreview = markdown.render(this.post.slots[slotIndex].text);
     },
 
-    async renderText(slotNumber) {
-      this.renderedPreview = markdown.render(this.post.slots[slotNumber].text);
-      await this.saveImage(slotNumber);
+    async saveImageToSlot(slotIndex) {
+      const imgSrc = await imageCreation.generateImageUrl();
+
+      this.$emit('change-slot-image', {
+        imgSrc: imgSrc,
+        slotId: this.post.slots[slotIndex].id,
+      });
     },
 
-    renderTextDebounced: debounce(RENDER_TEXT_DELAY, function() {
-        this.renderText(this.currentSlotNumber);
+    async convertSlotText(slotIndex) {
+      this.renderPreview(slotIndex);
+      await this.saveImageToSlot(slotIndex);
+    },
+
+    convertSlotTextDebounced: debounce(RENDER_TEXT_DELAY, function() {
+        this.convertSlotText(this.currentSlotIndex);
     }),
 
     downloadImage() {
@@ -111,7 +136,7 @@ export default {
           <textarea 
             :disabled="isDisabled"
             :value="post.fullText"
-            @input="$emit('save-text', $event.target.value)"
+            @input="saveFullText"
             class="field full"
             placeholder="Place your full text here, and divide it between images later"
           ></textarea>
@@ -123,8 +148,8 @@ export default {
           <textarea
             :autofocus="isBigScreen"
             :disabled="isDisabled"
-            :value="post.slots[this.currentSlotNumber]?.text"
-            @input="saveText"
+            :value="post.slots[this.currentSlotIndex]?.text"
+            @input="saveSlotText"
             class="field current"
             placeholder="Style text here"
           ></textarea>
@@ -134,7 +159,7 @@ export default {
         <AppButton 
           link-like
           markdown
-          @click="$emit('toggle-markdown-hint')"
+          @click="toggleMarkdownHint"
         >
           <span v-if="isMarkdownHintHidden">show </span>
           <span v-else>hide </span>
@@ -160,14 +185,14 @@ export default {
       </div>
       <div class="buttons">
         <AppButton 
-          :disabled="!renderedPreview || !isProjectFilled"
+          :disabled="isPreviewButtonDisabled"
           button-like
           @click="downloadImage"
         >
           download as jpg
         </AppButton>
         <AppButton
-          :disabled="!renderedPreview || !isProjectFilled"
+          :disabled="isPreviewButtonDisabled"
           button-like
           @click="copyImage"
         > 

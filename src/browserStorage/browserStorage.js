@@ -1,4 +1,4 @@
-export default {
+export const browserStorage = {
   reset() {
     localStorage.clear();
   },

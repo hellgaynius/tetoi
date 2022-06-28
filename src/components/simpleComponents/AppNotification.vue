@@ -1,12 +1,12 @@
 <script>
   export default {
+    NOTIFICATION_REMOVE_DELAY: 10000,
+    
     props: {
       notification: Object,
     },
 
     emits: ['close-notification'],
-
-    NOTIFICATION_REMOVE_DELAY: 10000,
 
     data() {
       return {
