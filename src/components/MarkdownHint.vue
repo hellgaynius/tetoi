@@ -1,9 +1,5 @@
 <script>
 export default {
-  props: {
-    active: Boolean,
-  },
-
   data() {
     return {
       rulesets: {

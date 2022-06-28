@@ -1,20 +1,23 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import markdown from '../processes/markdown.js';
-import imageCreation from '../processes/imageCreation.js';
+import markdown from '@/processes/markdown.js';
+import imageCreation from '@/processes/imageCreation.js';
 import { debounce } from 'throttle-debounce';
 
 markdown.init();
 
 const RENDER_TEXT_DELAY = 1000;
-const COPIED_REMOVE_DELAY = 2000;
 
 export default {
   components: {
     AppButton,
   },
 
+  COPIED_REMOVE_DELAY: 2000,
+
   props: {
+    isProjectFilled: Boolean,
+    isProjectPublished: Boolean,
     isMarkdownHintHidden: Boolean,
     currentSlotNumber: Number,
     post: Object,
@@ -35,52 +38,46 @@ export default {
     }
   },
 
-  computed: {
-    currentTextValue() {
-      return this.post.slots[this.currentSlotNumber]?.text || '';
-    },
-
-    fullTextValue() {
-      return this.post.fullText || '';
-    },
-
-    isPreviewButtonDisabled() {
-      return !this.renderedPreview;
-    },
-  },
-
   watch: {
-    async renderedPreview() {
-      const imgSrc = await imageCreation.saveToSlot();
-
-      this.$emit('change-slot-image', imgSrc, this.currentSlotNumber);
-    },
-
-    currentTextValue() {
-      if (this.post.slots[this.currentSlotNumber].imgSrc) {
-        this.renderTextDebounced()
-      } else {
-        this.renderText();
-      }
-    },
-
     currentSlotNumber() {
-      this.renderText();
+      this.renderText(this.currentSlotNumber);
     },
   },
 
-  mounted() {
+  async mounted() {
     imageCreation.init(this.$refs.preview);
-    this.renderText();
+
+    if (this.isProjectPublished)
+    await this.createInitialImages();
   },
 
   methods: {
-    renderText() {
-      this.renderedPreview = markdown.render(this.currentTextValue);
+    saveText(event) {
+      this.$emit('save-text', event.target.value, 'slot');
+      this.renderTextDebounced()
+    },
+
+    async createInitialImages() {
+      for (let i = this.post.slots.length - 1; i >= 0; i--) {
+        if (this.post.slots[i].text) {
+          await this.renderText(i);
+        }
+      };
+    },
+
+    async saveImage(slotNumber) {
+      const imageItem = await imageCreation.generateImageUrl();
+
+      this.$emit('change-slot-image', imageItem, [this.post.slots[slotNumber].id]);
+    },
+
+    async renderText(slotNumber) {
+      this.renderedPreview = markdown.render(this.post.slots[slotNumber].text);
+      await this.saveImage(slotNumber);
     },
 
     renderTextDebounced: debounce(RENDER_TEXT_DELAY, function() {
-      this.renderText();
+        this.renderText(this.currentSlotNumber);
     }),
 
     downloadImage() {
@@ -93,7 +90,7 @@ export default {
 
       setTimeout(() => {
         this.isCopiedPopupHidden = true;
-      }, COPIED_REMOVE_DELAY);
+      }, this.$options.COPIED_REMOVE_DELAY);
     },
   },
 }
@@ -108,7 +105,7 @@ export default {
             Whole text:
           </h3>
           <textarea 
-            :value="fullTextValue"
+            :value="post.fullText"
             @input="$emit('save-text', $event.target.value)"
             class="field full"
             placeholder="Place your full text here, and divide it between images later"
@@ -120,17 +117,16 @@ export default {
           </h3>
           <textarea
             :autofocus="isBigScreen"
-            :value="currentTextValue"
-            @input="$emit('save-text', $event.target.value, 'slot')"
+            :value="post.slots[this.currentSlotNumber]?.text"
+            @input="saveText"
             class="field current"
             placeholder="Style text here"
-            ref="currentTextArea"
           ></textarea>
         </label>
       </div>
       <div class="buttons">
         <AppButton 
-          linkLike
+          link-like
           markdown
           @click="$emit('toggle-markdown-hint')"
         >
@@ -151,28 +147,28 @@ export default {
         >
           <div 
             class="preview"
+            v-show="isProjectFilled"
             v-html="renderedPreview"
-          >
-          </div>
+          ></div>
         </div>
       </div>
       <div class="buttons">
         <AppButton 
-          :disabled="isPreviewButtonDisabled"
-          buttonLike
+          :disabled="!renderedPreview || !isProjectFilled"
+          button-like
           @click="downloadImage"
         >
           download as jpg
         </AppButton>
         <AppButton
-          :disabled="isPreviewButtonDisabled"
-          buttonLike
+          :disabled="!renderedPreview || !isProjectFilled"
+          button-like
           @click="copyImage"
         > 
           copy as png
         </AppButton>
       </div>
-      <Transition>
+      <Transition name="fade-copied">
         <div 
           class="copied-notification"
           v-if="!isCopiedPopupHidden"
@@ -190,6 +186,7 @@ export default {
 @import '@/assets/mixins';
 @import '@/assets/global';
 @import '@/assets/preview';
+@import '@/assets/app-transition';
 
 .text-transformator {
   display: flex;
@@ -268,8 +265,6 @@ export default {
       width: var(--preview-width);
       aspect-ratio: var(--preview-aspect-ratio);
       padding: var(--preview-wrapper-padding);
-      width: var(--preview-width);
-      aspect-ratio: 0.8;
       overflow: hidden;
       background-color: colors.$secondary-light;
     }
@@ -294,10 +289,6 @@ export default {
     font-variant-caps: all-small-caps;
     border-radius: 5px;
     @include radial-shadow;
-    &.v-leave-to {
-      opacity: 0;
-      transition: opacity 1s ease;
-    }
   }
 }
 

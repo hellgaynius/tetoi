@@ -8,8 +8,6 @@ import browserStorage from '@/browserStorage/browserStorage.js'
 import apiMethods from '@/api/api.js';
 import { nanoid } from 'nanoid';
 
-const LOCAL_STORAGE_ITEM_NAME = 'localProject';
-
 export default {
   components: {
     AppNotification,
@@ -19,10 +17,13 @@ export default {
     ProjectActions,
   },
 
+  LOCAL_STORAGE_ITEM_NAME: 'localProject',
+
   data() {
     return {
       isProjectSaved: false,
       isProjectPublished: false,
+      isProjectLoaded: false,
       projectId: null,
       isMarkdownHintHidden: true,
       notification: {
@@ -30,7 +31,8 @@ export default {
         type: 'info',
         text: '',
       },
-      post: null,
+      post: {},
+      images: {},
       currentSlotNumber: 0,
     }
   },
@@ -43,86 +45,46 @@ export default {
   },
 
   created() {
+    this.setInitialPost();
     this.initProjectState();
   },
 
   methods: {
-    showNotification(type, text) {
-      this.notification = {
-        show: true,
-        type: type,
-        text: text,
-      };
-    },
-
     setInitialPost() {
       this.post = { 
         fullText: '', 
         slots: [
           {
             text: '',
-            imgSrc: '',
             id: nanoid(),
           },
         ],
       };
     },
 
-    resetProject() {
-      this.setInitialPost(),
-      this.currentSlotNumber = 0;
-    },
+    async initProjectState() {
+      let project = null;
 
-    saveText(textValue, targetContainer) {
-      if (targetContainer === 'slot') {
-        this.post.slots[this.currentSlotNumber].text = textValue;
-      } else {
-        this.post.fullText = textValue;
-      }
+      this.projectId = window.location.pathname;
 
-      if (this.isProjectPublished) {
-        this.isProjectSaved = false;
-      }
+      if (this.projectId.length > 1) {
+        project = await this.fetchProject(this.projectId);
+      } 
 
-      browserStorage.handle(
-        this.isProjectFilled, 
-        this.isProjectPublished, 
-        LOCAL_STORAGE_ITEM_NAME, 
-        this.post
-      );
-    },
+      if (!project) {
+        this.projectId = null;
+        project = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
 
-    changeCurrentSlotNumber(index) {
-      this.currentSlotNumber = index;
-    },
-
-    changeSlotImage(imgSrc, slotIndex) {
-      this.post.slots[slotIndex].imgSrc = imgSrc;
-    },
-
-    removeSlot(id) {
-      const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
-
-      if (this.currentSlotNumber === deletedSlotIndex) {
-        this.currentSlotNumber = 0;
-      } else if (this.currentSlotNumber > deletedSlotIndex) {
-        this.currentSlotNumber -= 1;
+        this.showNotification('info', 
+          `Project is saved locally for this browser. <br>
+          To have access from everywhere, publish your project.`)
       };
 
-      this.post.slots =
-        this.post.slots.filter(slot => slot.id != id);
-    },
+      if (project) {
+        this.post = project;
+      };
 
-    async setProjectId(id) {
-      this.projectId = '/' + await id;
-    },
-
-    togglePublishedTextStatus() {
-      this.isProjectSaved = !this.isProjectSaved;
-    },
-
-    togglePublishStatus() {
-      this.isProjectPublished = !this.isProjectPublished;
+      this.isProjectLoaded = true;
     },
 
     fetchProject(projectId) {
@@ -142,31 +104,77 @@ export default {
         })
     },
 
-    async initProjectState() {
-      let serverStore = null;
-      let localStore = null;
-
-      this.projectId = window.location.pathname;
-
-      if (this.projectId.length > 1) {
-        serverStore = await this.fetchProject(this.projectId)
-      } 
-
-      if (!serverStore) {
-        localStore = browserStorage.fetch(LOCAL_STORAGE_ITEM_NAME);
-
-        this.showNotification('info', 
-          `Project is saved locally for this browser. <br>
-          To have access from everywhere, publish your project.`)
+    showNotification(type, text) {
+      this.notification = {
+        show: true,
+        type: type,
+        text: text,
       };
+    },
 
-      const project = serverStore || localStore;
+    closeNotification() {
+      this.notification.show = false;
+    },
 
-      if (project) {
-        this.post = project;
+    saveText(textValue, targetContainer) {
+      if (targetContainer === 'slot') {
+        this.post.slots[this.currentSlotNumber].text = textValue;
       } else {
-        this.setInitialPost();
+        this.post.fullText = textValue;
+      }
+
+      if (this.isProjectPublished) {
+        this.isProjectSaved = false;
+      }
+
+      browserStorage.handle(
+        this.isProjectFilled, 
+        this.isProjectPublished, 
+        this.$options.LOCAL_STORAGE_ITEM_NAME, 
+        this.post,
+      );
+    },
+
+    toggleMarkdownHint() {
+      this.isMarkdownHintHidden = !this.isMarkdownHintHidden;
+    },
+
+    changeCurrentSlotNumber(index) {
+      this.currentSlotNumber = index;
+    },
+
+    changeSlotImage(imgSrc, slotId) {
+      this.images[slotId] = imgSrc;
+    },
+
+    removeSlot(id) {
+      const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
+
+      if (this.currentSlotNumber === deletedSlotIndex) {
+        this.currentSlotNumber = 0;
+      } else if (this.currentSlotNumber > deletedSlotIndex) {
+        this.currentSlotNumber -= 1;
       };
+
+      this.post.slots.splice(deletedSlotIndex, 1);
+    },
+
+    setProjectId(id) {
+      this.projectId = '/' + id;
+    },
+
+    togglePublishedTextStatus() {
+      this.isProjectSaved = !this.isProjectSaved;
+    },
+
+    togglePublishStatus() {
+      this.isProjectPublished = !this.isProjectPublished;
+    },
+
+    resetProject() {
+      this.setInitialPost(),
+      this.currentSlotNumber = 0;
+      this.images = [];
     },
   },
 };
@@ -175,7 +183,7 @@ export default {
 <template>
   <AppNotification
     :notification="notification"
-    @close-notification="notification.show = false"
+    @close-notification="closeNotification"
   />
   <div class="app">
     <h1 class="logo">tetoi</h1>
@@ -190,19 +198,29 @@ export default {
         >saved</span>
         <span 
           v-else
-          class="status-text unsaved">unsaved</span>
+          class="status-text unsaved"
+        >unsaved</span>
       </div>
       <TextTransformator
+        v-if="isProjectLoaded"
+        :is-project-published="isProjectPublished"
+        :is-project-filled="isProjectFilled"
         :is-markdown-hint-hidden="isMarkdownHintHidden"
         :current-slot-number="currentSlotNumber"
         :post="post"
-        @toggle-markdown-hint="isMarkdownHintHidden = !isMarkdownHintHidden"
+        @toggle-markdown-hint="toggleMarkdownHint"
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
       />
+      <div
+        class="preload-placeholder"
+        v-else
+      >
+      </div>
       <MarkdownHint v-show="!isMarkdownHintHidden"/>
       <ResultImages
         :current-slot-number="currentSlotNumber"
+        :images="images"
         :slots="post.slots"
         @change-current-slot-id="changeCurrentSlotNumber"
         @remove-slot="removeSlot"
@@ -251,6 +269,13 @@ export default {
   }
   .project-status {
     text-align: right;
+  }
+  .preload-placeholder {
+    width: 700px;
+    height: 555px;
+    background-image: url('../preloader.png');
+    background-position: center;
+    opacity: 0.1;
   }
   .status-text {
     letter-spacing: 4px;

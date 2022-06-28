@@ -1,12 +1,12 @@
 <script>
-  const NOTIFICATION_REMOVE_DELAY = 10000;
-
   export default {
     props: {
       notification: Object,
     },
 
     emits: ['close-notification'],
+
+    NOTIFICATION_REMOVE_DELAY: 10000,
 
     data() {
       return {
@@ -15,12 +15,10 @@
     },
 
     watch: {
-      notification: {
-        handler() {
-          this.stopRemoval();
-          this.removeWithDelay();
-        },
-      }
+      notification() {
+        this.stopRemoval();
+        this.removeWithDelay();
+      },
     },
 
     mounted() {
@@ -37,7 +35,7 @@
           setTimeout(() => {
             this.$emit('close-notification');
           }, 
-          NOTIFICATION_REMOVE_DELAY,
+          this.$options.NOTIFICATION_REMOVE_DELAY,
         );
       },
     },
@@ -45,7 +43,7 @@
 </script>
 
 <template>
-  <Transition>
+  <Transition name="fade-notification">
     <div 
       class="notification"
       :class="notification.type"
@@ -60,8 +58,7 @@
       <div 
         class="close-icon"
         @click="$emit('close-notification')"
-      >
-      </div>
+      ></div>
     </div>
   </Transition>
 </template>
@@ -83,11 +80,6 @@
   background-color: colors.$secondary-light;
   text-align: center;
   overflow-wrap: break-word;
-  transition: opacity 3s;
-  &.v-leave-to {
-    opacity: 0;
-    transition: opacity 3s ease;
-  }
   &.removed {
     opacity: 0;
   }

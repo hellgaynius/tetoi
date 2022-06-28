@@ -9,8 +9,8 @@ export default {
 
   props: {
     slots: Object,
+    images: Object,
     currentSlotNumber: Number,
-    currentTextValue: String,
   },
 
   emits: [
@@ -18,18 +18,11 @@ export default {
     'remove-slot',
   ],
 
-  computed: {
-    slotsQuantity() {
-      return this.slots.length;
-    },
-  },
-
   methods: {
     addSlot() {
       this.slots.push(
         {
           text: '', 
-          imgSrc: '',
           id: nanoid(),
         }
       );
@@ -63,16 +56,16 @@ export default {
           @click="chooseSlot(index)"
         > 
           <img 
-            v-if="slot.imgSrc"
-            :src="slot.imgSrc"
+            v-if="images[slot.id]"
+            :src="images[slot.id]"
             class="cloned-preview" 
           />
         </div>
         <div class="button-wrapper">
           <AppButton 
             class="remove-slot"
-            linkLike
-            v-show="slotsQuantity > 1"
+            link-like
+            v-show="slots.length > 1"
             @click="$emit('remove-slot', slot.id)"
           >
             delete
@@ -80,7 +73,7 @@ export default {
         </div>
       </div>
       <div 
-        v-show="slotsQuantity < 10"
+        v-show="slots.length < 10"
         class="add-slot"
         title="add one more page"
       >

@@ -26,35 +26,17 @@ export default {
 
   data() {
     return {
-      isPublishButtonDisabled: !this.isProjectFilled,
-      isResetButtonDisabled: !this.isProjectFilled,
-      isSaveButtonDisabled: this.isProjectSaved,
-      isDeleteButtonDisabled: !this.isProjectPublished,
+      isAwaitingServerAnswer: false,
     }
-  },
-
-  watch: {
-    isProjectFilled(newValue) {
-      this.isPublishButtonDisabled = !newValue;
-      this.isResetButtonDisabled = !newValue;
-    },
-
-    isProjectSaved(newValue) {
-      this.isSaveButtonDisabled = newValue;
-    },
-
-    isProjectPublished(newValue) {
-      this.isDeleteButtonDisabled = !newValue;
-    },
   },
 
   methods: {
     publishProject() {
-      this.isPublishButtonDisabled = true;
-      this.isResetButtonDisabled = true;
+      this.isAwaitingServerAnswer = true;
 
       apiMethods.publish(this.post)
         .then(response => {
+          this.isAwaitingServerAnswer = false;
           this.$emit('set-project-id', response.id);
           this.$emit('toggle-publish-status');
           this.$emit('toggle-published-text-status');
@@ -69,35 +51,32 @@ export default {
           );
         })
         .catch(error => {
-          this.isPublishButtonDisabled = false;
-          this.isResetButtonDisabled = false;
+          this.isAwaitingServerAnswer = false;
           this.$emit('show-notification', 'warning', error);
         });
     },
 
     updateProject() {
-      this.isSaveButtonDisabled = true;
-      this.isDeleteButtonDisabled = true;
+      this.isAwaitingServerAnswer = true;
 
       apiMethods.update(this.post, this.projectId)
         .then(() => {
+          this.isAwaitingServerAnswer = false;
           this.$emit('toggle-published-text-status');
-          this.isDeleteButtonDisabled = false; 
           this.$emit('show-notification', 'info', `Updates were saved successfully`);
         })
         .catch(error => {
-          this.isSaveButtonDisabled = false;
-          this.isDeleteButtonDisabled = false;
+          this.isAwaitingServerAnswer = false;
           this.$emit('show-notification', 'warning', error);
         });
     },
 
     deleteProject() {
-      this.isSaveButtonDisabled = true,
-      this.isDeleteButtonDisabled = true;
+      this.isAwaitingServerAnswer = true;
 
       apiMethods.delete(this.projectId)
         .then(() => {
+          this.isAwaitingServerAnswer = false;
           window.history.replaceState({}, '', window.location.origin);
           this.resetProject();
           this.$emit('show-notification', 'info', `Project ${this.projectId} deleted`);
@@ -106,7 +85,7 @@ export default {
           this.$emit('toggle-publish-status');
         })
         .catch(error => {
-          this.isDeleteButtonDisabled = false;
+          this.isAwaitingServerAnswer = false;
           this.$emit('show-notification', 'warning', error);
         })
     },
@@ -126,8 +105,8 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isPublishButtonDisabled"
-            buttonLike
+            :disabled="isProjectPublished || !isProjectFilled || isAwaitingServerAnswer"
+            button-like
             big
             @click="publishProject"
           >
@@ -137,8 +116,8 @@ export default {
         <div class="third-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isResetButtonDisabled"
-            linkLike
+            :disabled="isProjectPublished || !isProjectFilled || isAwaitingServerAnswer"
+            link-like
             @click="resetProject"
           >
             reset project
@@ -152,8 +131,8 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isSaveButtonDisabled"
-            buttonLike
+            :disabled="isProjectSaved || isAwaitingServerAnswer"
+            button-like
             big
             @click="updateProject"
           >
@@ -163,8 +142,8 @@ export default {
         <div class="third-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isDeleteButtonDisabled"
-            linkLike
+            :disabled="isAwaitingServerAnswer"
+            link-like
             @click="deleteProject"
           >
             delete saved project

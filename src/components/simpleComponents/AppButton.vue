@@ -12,12 +12,12 @@ export default {
 <template>
   <button 
     class="app-button"
-    :class="[
-      { 'button-like': buttonLike },
-      { 'link-like': linkLike},
-      { big }, 
-      { markdown }, 
-    ]"
+    :class="{
+      'button-like': buttonLike,
+      'link-like': linkLike,
+      big,
+      markdown
+    }"
   >
     <slot />
   </button>

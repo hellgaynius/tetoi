@@ -17,7 +17,7 @@ export default {
     };
   },  
 
-  saveToSlot() {
+  generateImageUrl() {
     return domtoimage.toJpg(this.imageOptions.preview, this.imageOptions.options)
       .then(dataUrl => {
         return dataUrl;
