@@ -9,6 +9,7 @@ export default {
   },
 
   props: {
+    isRequestOngoing: Boolean,
     isProjectPublished: Boolean,
     isProjectSaved: Boolean,
     isProjectFilled: Boolean,
@@ -18,28 +19,23 @@ export default {
 
   emits: [
     'set-project-id',
-    'toggle-published-text-status', 
+    'change-request-status',
+    'toggle-save-status', 
     'toggle-publish-status',
     'reset-project', 
-    'show-notification'
+    'show-notification',
   ],
-
-  data() {
-    return {
-      isAwaitingServerAnswer: false,
-    }
-  },
 
   methods: {
     publishProject() {
-      this.isAwaitingServerAnswer = true;
+      this.$emit('change-request-status', true);
 
       apiMethods.publish(this.post)
         .then(response => {
-          this.isAwaitingServerAnswer = false;
+          this.$emit('change-request-status', false);
           this.$emit('set-project-id', response.id);
           this.$emit('toggle-publish-status');
-          this.$emit('toggle-published-text-status');
+          this.$emit('toggle-save-status');
           browserStorage.reset();
           window.history.replaceState({}, '', response.id);
           this.$emit(
@@ -51,41 +47,41 @@ export default {
           );
         })
         .catch(error => {
-          this.isAwaitingServerAnswer = false;
+          this.$emit('change-request-status', false);
           this.$emit('show-notification', 'warning', error);
         });
     },
 
     updateProject() {
-      this.isAwaitingServerAnswer = true;
+      this.$emit('change-request-status', true);
 
       apiMethods.update(this.post, this.projectId)
         .then(() => {
-          this.isAwaitingServerAnswer = false;
-          this.$emit('toggle-published-text-status');
+          this.$emit('change-request-status', false);
+          this.$emit('toggle-save-status');
           this.$emit('show-notification', 'info', `Updates were saved successfully`);
         })
         .catch(error => {
-          this.isAwaitingServerAnswer = false;
+          this.$emit('change-request-status', false);
           this.$emit('show-notification', 'warning', error);
         });
     },
 
     deleteProject() {
-      this.isAwaitingServerAnswer = true;
+      this.$emit('change-request-status', true);
 
       apiMethods.delete(this.projectId)
         .then(() => {
-          this.isAwaitingServerAnswer = false;
+          this.$emit('change-request-status', false);
           window.history.replaceState({}, '', window.location.origin);
           this.resetProject();
           this.$emit('show-notification', 'info', `Project ${this.projectId} deleted`);
           this.$emit('set-project-id', null);
-          this.$emit('toggle-published-text-status');
+          this.$emit('toggle-save-status');
           this.$emit('toggle-publish-status');
         })
         .catch(error => {
-          this.isAwaitingServerAnswer = false;
+          this.$emit('change-request-status', false);
           this.$emit('show-notification', 'warning', error);
         })
     },
@@ -105,7 +101,7 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectPublished || !isProjectFilled || isAwaitingServerAnswer"
+            :disabled="isProjectPublished || !isProjectFilled || isRequestOngoing"
             button-like
             big
             @click="publishProject"
@@ -116,7 +112,7 @@ export default {
         <div class="third-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectPublished || !isProjectFilled || isAwaitingServerAnswer"
+            :disabled="isProjectPublished || !isProjectFilled || isRequestOngoing"
             link-like
             @click="resetProject"
           >
@@ -131,7 +127,7 @@ export default {
         <div class="second-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isProjectSaved || isAwaitingServerAnswer"
+            :disabled="isProjectSaved || isRequestOngoing"
             button-like
             big
             @click="updateProject"
@@ -142,7 +138,7 @@ export default {
         <div class="third-grid-column">
           <AppButton
             class="action-button"
-            :disabled="isAwaitingServerAnswer"
+            :disabled="isRequestOngoing"
             link-like
             @click="deleteProject"
           >

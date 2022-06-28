@@ -16,8 +16,9 @@ export default {
   COPIED_REMOVE_DELAY: 2000,
 
   props: {
+    isDisabled: Boolean,
+    isProjectLoaded: Boolean,
     isProjectFilled: Boolean,
-    isProjectPublished: Boolean,
     isMarkdownHintHidden: Boolean,
     currentSlotNumber: Number,
     post: Object,
@@ -42,13 +43,16 @@ export default {
     currentSlotNumber() {
       this.renderText(this.currentSlotNumber);
     },
+
+    isProjectLoaded(newValue) {
+      if (newValue) {
+        this.createInitialImages();
+      }
+    }
   },
 
-  async mounted() {
+  mounted() {
     imageCreation.init(this.$refs.preview);
-
-    if (this.isProjectPublished)
-    await this.createInitialImages();
   },
 
   methods: {
@@ -105,6 +109,7 @@ export default {
             Whole text:
           </h3>
           <textarea 
+            :disabled="isDisabled"
             :value="post.fullText"
             @input="$emit('save-text', $event.target.value)"
             class="field full"
@@ -117,6 +122,7 @@ export default {
           </h3>
           <textarea
             :autofocus="isBigScreen"
+            :disabled="isDisabled"
             :value="post.slots[this.currentSlotNumber]?.text"
             @input="saveText"
             class="field current"

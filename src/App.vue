@@ -21,6 +21,7 @@ export default {
 
   data() {
     return {
+      isRequestOngoing: true,
       isProjectSaved: false,
       isProjectPublished: false,
       isProjectLoaded: false,
@@ -88,8 +89,11 @@ export default {
     },
 
     fetchProject(projectId) {
+      this.isRequestOngoing = true;
+
       return apiMethods.get(projectId)
         .then(serverResponse => {
+          this.isRequestOngoing = false;
           this.isProjectPublished = true;
           this.isProjectSaved = true;
           this.showNotification('info', 'Successfuly loaded project from server');
@@ -97,6 +101,7 @@ export default {
           return serverResponse;
         })
         .catch(error => {
+          this.isRequestOngoing = false;
           window.history.replaceState({}, '', window.location.origin);
           this.showNotification('warning', error);
 
@@ -163,7 +168,11 @@ export default {
       this.projectId = '/' + id;
     },
 
-    togglePublishedTextStatus() {
+    changeRequestStatus(newValue) {
+      this.isRequestOngoing = newValue;
+    },
+
+    toggleSaveStatus() {
       this.isProjectSaved = !this.isProjectSaved;
     },
 
@@ -188,6 +197,10 @@ export default {
   <div class="app">
     <h1 class="logo">tetoi</h1>
     <main class="main">
+      <div 
+        class="preloader-mask"
+        v-show="isRequestOngoing"
+      ></div>
       <div
         v-show="isProjectPublished"
         class="project-status"
@@ -202,7 +215,8 @@ export default {
         >unsaved</span>
       </div>
       <TextTransformator
-        v-if="isProjectLoaded"
+        :isDisabled="isRequestOngoing"
+        :is-project-loaded="isProjectLoaded"
         :is-project-published="isProjectPublished"
         :is-project-filled="isProjectFilled"
         :is-markdown-hint-hidden="isMarkdownHintHidden"
@@ -212,11 +226,6 @@ export default {
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
       />
-      <div
-        class="preload-placeholder"
-        v-else
-      >
-      </div>
       <MarkdownHint v-show="!isMarkdownHintHidden"/>
       <ResultImages
         :current-slot-number="currentSlotNumber"
@@ -232,7 +241,8 @@ export default {
         :is-project-published="isProjectPublished"
         :is-project-saved="isProjectSaved"
         @set-project-id="setProjectId"
-        @toggle-published-text-status="togglePublishedTextStatus"
+        @change-request-status="changeRequestStatus"
+        @toggle-save-status="toggleSaveStatus"
         @toggle-publish-status="togglePublishStatus"
         @reset-project="resetProject"
         @show-notification="showNotification"
@@ -250,6 +260,11 @@ export default {
 .app {
   display: flex;
   flex-direction: column;
+  .logo {
+    position: absolute;
+    left: 100px;
+    font: bold small-caps 76px 'Marcellus SC', serif;
+  }
   .main {
     position: relative;
     display: flex;
@@ -259,23 +274,22 @@ export default {
     margin: 50px auto 150px auto;
     padding: 50px 50px 80px 50px;
     background-color: colors.$app-background;
-    border-radius: 20px;
+    border-radius: var(--main-border-radius);
     box-shadow: 10px 20px 70px colors.$app-shadow;
   }
-  .logo {
+  .preloader-mask {
     position: absolute;
-    left: 100px;
-    font: bold small-caps 76px 'Marcellus SC', serif;
+    z-index: 9;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--main-border-radius);
+    background-color: colors.$app-background;
+    opacity: 0.5;
   }
   .project-status {
     text-align: right;
-  }
-  .preload-placeholder {
-    width: 700px;
-    height: 555px;
-    background-image: url('../preloader.png');
-    background-position: center;
-    opacity: 0.1;
   }
   .status-text {
     letter-spacing: 4px;
