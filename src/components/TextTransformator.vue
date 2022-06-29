@@ -43,19 +43,23 @@ export default {
     isPreviewButtonDisabled() {
       return !this.renderedPreview || !this.isProjectFilled;
     },
+
+    currentTextValue() {
+      return this.post.slots[this.currentSlotIndex]?.text;
+    },
   },
 
   watch: {
-    post: {
-      handler(value) {
-        if (value.slots[this.currentSlotIndex].text) {
-          this.renderPreview(this.currentSlotIndex);
-        } else {
-          this.renderedPreview = '';
-        };
-      },
+    currentSlotIndex() {
+      this.renderPreview(this.currentSlotIndex);
+    },
 
-      deep: true,
+    currentTextValue(newValue) { 
+      if (newValue) {
+        this.buildDependentEntitiesForSlotDebounced();
+      } else {
+        this.renderPreview = '';
+      };
     },
 
     isProjectLoaded(newValue) {
@@ -80,7 +84,6 @@ export default {
 
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
-      this.buildDependentEntitiesForSlotDebounced();
     },
 
     saveFullText(event) {
@@ -157,7 +160,7 @@ export default {
           <textarea
             :autofocus="isBigScreen"
             :disabled="isDisabled"
-            :value="post.slots[this.currentSlotIndex]?.text"
+            :value="currentTextValue"
             @input="saveSlotText"
             class="field current"
             placeholder="Style text here"
