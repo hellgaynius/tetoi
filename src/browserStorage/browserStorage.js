@@ -16,10 +16,6 @@ export const browserStorage = {
   fetch(itemName) {
     const storage = localStorage.getItem(itemName);
 
-    if (storage) {
-      return JSON.parse(storage);
-    } else {
-      return null;
-    }
+    return storage ? JSON.parse(storage) : null;
   },
 };

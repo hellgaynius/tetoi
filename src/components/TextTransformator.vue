@@ -58,20 +58,19 @@ export default {
       deep: true,
     },
 
-    isProjectLoaded: {
-      handler(newValue) {
-        if (newValue) {
-          this.createInitialImages();
-        };
-      },
+    isProjectLoaded(newValue) {
+      if (newValue) {
+        this.createInitialImages();
+      };
     },
   },
 
   mounted() {
     imageCreation.init(this.$refs.preview);
-            if (this.isProjectLoaded) {
-          this.createInitialImages();
-        };
+    
+    if (this.isProjectLoaded) {
+      this.createInitialImages();
+    };
   },
 
   methods: {
