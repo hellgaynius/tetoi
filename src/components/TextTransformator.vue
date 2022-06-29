@@ -50,15 +50,15 @@ export default {
   },
 
   watch: {
-    currentSlotIndex() {
-      this.renderPreview(this.currentSlotIndex);
+    currentSlotIndex(index) {
+      this.renderPreview(index);
     },
 
     currentTextValue(newValue) { 
       if (newValue) {
         this.buildDependentEntitiesForSlotDebounced();
       } else {
-        this.renderPreview = '';
+        this.renderedPreview = '';
       };
     },
 
