@@ -1,0 +1,7 @@
+$l-breakpoint: 1400px;
+$m-breakpoint: 770px;
+$s-breakpoint: 650px;
+
+$l-media: "screen and (max-width: #{$l-breakpoint})";
+$m-media: "screen and (max-width: #{$m-breakpoint})";
+$s-media: "screen and (max-width: #{$s-breakpoint})";
