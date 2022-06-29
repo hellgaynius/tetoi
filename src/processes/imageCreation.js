@@ -18,14 +18,14 @@ export const imageCreation = {
   },  
 
   generateUrl() {
-    return domtoimage.toJpg(this.options.preview, this.options.compilation)
+    return domtoimage.toPng(this.options.preview, this.options.compilation)
       .then(dataUrl => {
         return dataUrl;
     });
   },
 
   download(fileName) {
-    domtoimage.toJpg(this.options.preview, this.options.compilation)
+    domtoimage.toPng(this.options.preview, this.options.compilation)
       .then(dataUrl => { 
         const linkEl = document.createElement('a');
 
