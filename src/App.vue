@@ -5,7 +5,7 @@ import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
 import AppNotification from '@/components/simpleComponents/AppNotification.vue'
 import { browserStorage } from '@/browserStorage/browserStorage.js'
-import { projectApi } from '@/api/api.js';
+import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
 export default {
@@ -89,7 +89,6 @@ export default {
       if (project) {
         this.post = project;
       };
-
       this.isProjectLoaded = true;
     },
 
@@ -180,15 +179,15 @@ export default {
       this.projectId = '/' + id;
     },
 
-    changeRequestStatus(status) {
+    setRequestStatus(status) {
       this.isRequestOngoing = status;
     },
 
-    toggleSaveStatus(status) {
+    setSaveStatus(status) {
       this.isProjectSaved = status;
     },
 
-    togglePublishStatus(status) {
+    setPublishStatus(status) {
       this.isProjectPublished = status;
     },
 
@@ -227,7 +226,7 @@ export default {
         >unsaved</span>
       </div>
       <TextTransformator
-        :isDisabled="isRequestOngoing"
+        :is-disabled="isRequestOngoing"
         :is-project-loaded="isProjectLoaded"
         :is-project-filled="isProjectFilled"
         :is-markdown-hint-hidden="isMarkdownHintHidden"
@@ -253,9 +252,9 @@ export default {
         :is-project-published="isProjectPublished"
         :is-project-saved="isProjectSaved"
         @set-project-id="setProjectId"
-        @change-request-status="changeRequestStatus"
-        @toggle-save-status="toggleSaveStatus"
-        @toggle-publish-status="togglePublishStatus"
+        @set-request-status="setRequestStatus"
+        @set-save-status="setSaveStatus"
+        @set-publish-status="setPublishStatus"
         @reset-project="resetProject"
         @show-notification="showNotification"
       />

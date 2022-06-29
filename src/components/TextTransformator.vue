@@ -46,21 +46,32 @@ export default {
   },
 
   watch: {
-    currentSlotIndex() {
-      if (this.post.slots[this.currentSlotIndex].text) {
-        this.renderText(this.currentSlotIndex);
-      };
+    post: {
+      handler(value) {
+        if (value.slots[this.currentSlotIndex].text) {
+          this.renderPreview(this.currentSlotIndex);
+        } else {
+          this.renderedPreview = '';
+        };
+      },
+
+      deep: true,
     },
 
-    isProjectLoaded(newValue) {
-      if (newValue) {
-        this.createInitialImages();
-      }
-    }
+    isProjectLoaded: {
+      handler(newValue) {
+        if (newValue) {
+          this.createInitialImages();
+        };
+      },
+    },
   },
 
   mounted() {
     imageCreation.init(this.$refs.preview);
+            if (this.isProjectLoaded) {
+          this.createInitialImages();
+        };
   },
 
   methods: {
@@ -70,7 +81,7 @@ export default {
 
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
-      this.convertSlotTextDebounced();
+      this.buildDependentEntitiesForSlotDebounced();
     },
 
     saveFullText(event) {
@@ -80,7 +91,7 @@ export default {
     async createInitialImages() {
       for (let i = 0; i < this.post.slots.length; i++) {
         if (this.post.slots[i].text) {
-          await this.convertSlotText(i);
+          await this.buildDependentEntitiesForSlot(i);
         }
       };
 
@@ -92,25 +103,24 @@ export default {
     },
 
     async saveImageToSlot(slotIndex) {
-      const imgSrc = await imageCreation.generateImageUrl();
-
+      const imgSrc = await imageCreation.generateUrl();
       this.$emit('change-slot-image', {
         imgSrc: imgSrc,
         slotId: this.post.slots[slotIndex].id,
       });
     },
 
-    async convertSlotText(slotIndex) {
+    buildDependentEntitiesForSlot(slotIndex) {
       this.renderPreview(slotIndex);
-      await this.saveImageToSlot(slotIndex);
+      return this.saveImageToSlot(slotIndex);
     },
 
-    convertSlotTextDebounced: debounce(RENDER_TEXT_DELAY, function() {
-        this.convertSlotText(this.currentSlotIndex);
+    buildDependentEntitiesForSlotDebounced: debounce(RENDER_TEXT_DELAY, function() {
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
     }),
 
     downloadImage() {
-      imageCreation.download();
+      imageCreation.download(`picture_page-${this.currentSlotIndex + 1}.jpg`);
     },
 
     copyImage() {
@@ -178,7 +188,6 @@ export default {
         >
           <div 
             class="preview"
-            v-show="isProjectFilled"
             v-html="renderedPreview"
           ></div>
         </div>

@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
-import { projectApi } from '@/api/api.js';
+import { projectApi } from '@/api/projectApi.js';
 
 export default {
   components: {
@@ -19,9 +19,9 @@ export default {
 
   emits: [
     'set-project-id',
-    'change-request-status',
-    'toggle-save-status', 
-    'toggle-publish-status',
+    'set-request-status',
+    'set-save-status', 
+    'set-publish-status',
     'reset-project', 
     'show-notification',
   ],
@@ -38,13 +38,13 @@ export default {
 
   methods: {
     publishProject() {
-      this.$emit('change-request-status', true);
+      this.$emit('set-request-status', true);
 
       projectApi.publish(this.post)
         .then(response => {
           this.$emit('set-project-id', response.id);
-          this.$emit('toggle-publish-status', true);
-          this.$emit('toggle-save-status', true);
+          this.$emit('set-publish-status', true);
+          this.$emit('set-save-status', true);
           browserStorage.reset();
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
@@ -61,16 +61,16 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('change-request-status', false);
+          this.$emit('set-request-status', false);
         });
     },
 
     updateProject() {
-      this.$emit('change-request-status', true);
+      this.$emit('set-request-status', true);
 
       projectApi.update(this.post, this.projectId)
         .then(() => {
-          this.$emit('toggle-save-status', true);
+          this.$emit('set-save-status', true);
           this.$emit('show-notification', {
               type: 'info',
               text: `Updates were saved successfully`,
@@ -83,12 +83,12 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('change-request-status', false);
+          this.$emit('set-request-status', false);
         });
     },
 
     deleteProject() {
-      this.$emit('change-request-status', true);
+      this.$emit('set-request-status', true);
 
       projectApi.delete(this.projectId)
         .then(() => {
@@ -99,8 +99,8 @@ export default {
               text: `Project ${this.projectId} deleted`,
             });
           this.$emit('set-project-id', null);
-          this.$emit('toggle-save-status', false);
-          this.$emit('toggle-publish-status', false);
+          this.$emit('set-save-status', false);
+          this.$emit('set-publish-status', false);
         })
         .catch(error => {
           this.$emit('show-notification', {
@@ -109,7 +109,7 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('change-request-status', false);
+          this.$emit('set-request-status', false);
         });
     },
 

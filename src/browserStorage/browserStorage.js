@@ -18,6 +18,8 @@ export const browserStorage = {
 
     if (storage) {
       return JSON.parse(storage);
+    } else {
+      return null;
     }
   },
 };

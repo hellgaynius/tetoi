@@ -2,10 +2,10 @@ import MarkdownIt from 'markdown-it';
 import markdownItAlign from 'markdown-it-align';
 
 export const markdown = {
-  markdownLib: null,
+  lib: null,
 
   init() {
-    this.markdownLib = new MarkdownIt('commonmark', {breaks: true})
+    this.lib = new MarkdownIt('commonmark', {breaks: true})
       .use(markdownItAlign)
       .disable(['link', 'image'], true);
       return 'success'
@@ -17,6 +17,6 @@ export const markdown = {
     but necessary for proper rendering of other elements */
     const textWithBreaks = text.replace(/\\\\\\/g, '<br />\n');
 
-    return this.markdownLib.render(textWithBreaks);
+    return this.lib.render(textWithBreaks);
   },
 };
