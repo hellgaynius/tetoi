@@ -119,7 +119,7 @@ export default {
     }),
 
     downloadImage() {
-      imageCreation.download(`picture_page-${this.currentSlotIndex + 1}.jpg`);
+      imageCreation.download(`picture_page-${this.currentSlotIndex + 1}.png`);
     },
 
     copyImage() {
@@ -197,14 +197,14 @@ export default {
           button-like
           @click="downloadImage"
         >
-          download as jpg
+          download
         </AppButton>
         <AppButton
           :disabled="isPreviewButtonDisabled"
           button-like
           @click="copyImage"
         > 
-          copy as png
+          copy
         </AppButton>
       </div>
       <Transition name="fade-copied">
