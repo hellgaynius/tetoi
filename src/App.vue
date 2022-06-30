@@ -3,6 +3,7 @@ import TextTransformator from '@/components/TextTransformator.vue';
 import ResultImages from '@/components/ResultImages.vue';
 import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
+import AppPreloader from '@/components/simpleComponents/AppPreloader.vue'
 import AppNotification from '@/components/simpleComponents/AppNotification.vue'
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
@@ -12,6 +13,7 @@ export default {
   LOCAL_STORAGE_ITEM_NAME: 'localProject',
 
   components: {
+    AppPreloader,
     AppNotification,
     TextTransformator,
     MarkdownHint,
@@ -201,6 +203,9 @@ export default {
 </script>
 
 <template>
+  <AppPreloader
+    :is-active="isRequestOngoing"
+  />
   <AppNotification
     :notification="notification"
     @close-notification="closeNotification"
@@ -271,6 +276,7 @@ export default {
 .app {
   display: flex;
   flex-direction: column;
+  z-index: 0;
   .logo {
     position: absolute;
     left: 100px;
@@ -286,7 +292,7 @@ export default {
     padding: 50px 50px 80px 50px;
     background-color: colors.$app-background;
     border-radius: var(--main-border-radius);
-    box-shadow: 10px 20px 70px colors.$app-shadow;
+    box-shadow: 10px 10px colors.$secondary;
   }
   .preloader-mask {
     position: absolute;

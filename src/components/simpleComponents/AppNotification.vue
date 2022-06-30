@@ -1,6 +1,7 @@
 <script>
   export default {
-    NOTIFICATION_REMOVE_DELAY: 10000,
+    NOTIFICATION_FADE_DELAY: 10000,
+    NOTIFICATION_REMOVE_DELAY: 13000,
     
     props: {
       notification: Object,
@@ -11,23 +12,26 @@
     data() {
       return {
         removeTimeoutId: null,
+        fadeTimeoutId: null,
+        isRemoved: false,
       }
     },
 
     watch: {
-      notification() {
-        this.stopRemoval();
-        this.removeWithDelay();
-      },
-    },
+      notification: {
+        handler() {
+          this.stopRemoval();
+          this.removeWithDelay();
+        },
 
-    mounted() {
-      this.removeWithDelay();
+        immediate: true,
+      },
     },
 
     methods: {
       stopRemoval() {
         clearTimeout(this.removeTimeoutId);
+        this.isRemoved = false;
       },
 
       removeWithDelay() {
@@ -37,30 +41,38 @@
           }, 
           this.$options.NOTIFICATION_REMOVE_DELAY,
         );
+
+        this.fadeTimeoutId = 
+          setTimeout(() => {
+            this.isRemoved = true;
+          }, 
+          this.$options.NOTIFICATION_FADE_DELAY,
+        );
       },
     },
   };
 </script>
 
 <template>
-  <Transition name="fade-notification">
+  <div 
+    class="notification"
+    :class="[
+      notification.type,
+      {removed: isRemoved}
+    ]"
+    v-show="notification.show"
+    @mouseenter="stopRemoval"
+    @mouseleave="removeWithDelay"
+  >
+    <span 
+      class="text"
+      v-html="notification.text"
+    ></span>
     <div 
-      class="notification"
-      :class="notification.type"
-      v-show="notification.show"
-      @mouseenter="stopRemoval"
-      @mouseleave="removeWithDelay"
-    >
-      <span 
-        class="text"
-        v-html="notification.text"
-      ></span>
-      <div 
-        class="close-icon"
-        @click="$emit('close-notification')"
-      ></div>
-    </div>
-  </Transition>
+      class="close-icon"
+      @click="$emit('close-notification')"
+    ></div>
+  </div>
 </template>
 
 <style lang="scss">
@@ -82,6 +94,7 @@
   overflow-wrap: break-word;
   &.removed {
     opacity: 0;
+    transition: opacity 3s ease;
   }
   &:hover {
     opacity: 1;

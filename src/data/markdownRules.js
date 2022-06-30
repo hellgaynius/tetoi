@@ -34,7 +34,7 @@ export const markdownRules = {
       rules: [
         '*italic*',
         '**bold**',
-        '\\\ empty line',
+        '\\\\\\ empty line',
         '> blockquote',
         '`code`',
       ]

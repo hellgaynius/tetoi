@@ -275,6 +275,7 @@ export default {
     resize: none;
     border-radius: unset;
     transition: box-shadow 0.2s;
+    border: none;
     @include solid-border;
     &:focus-visible {
       @include light-shadow;
