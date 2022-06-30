@@ -203,9 +203,7 @@ export default {
 </script>
 
 <template>
-  <AppPreloader
-    :is-active="isRequestOngoing"
-  />
+  <AppPreloader :is-active="isRequestOngoing" />
   <AppNotification
     :notification="notification"
     @close-notification="closeNotification"
@@ -276,7 +274,6 @@ export default {
 .app {
   display: flex;
   flex-direction: column;
-  z-index: 0;
   .logo {
     position: absolute;
     left: 100px;

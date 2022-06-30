@@ -34,6 +34,9 @@ export const markdownRules = {
       rules: [
         '*italic*',
         '**bold**',
+        // as backslash is an escape symbol, we need to write 
+        // six of them in the code
+        // so that three of them appear on the webpage
         '\\\\\\ empty line',
         '> blockquote',
         '`code`',

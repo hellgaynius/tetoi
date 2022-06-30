@@ -12,8 +12,7 @@ export default {
       v-if="isActive"
       class="preloader-bar"
     >
-      <div class="preloader">
-      </div>
+      <div class="preloader"></div>
     </div>
   </Transition>
 </template>
@@ -43,7 +42,7 @@ export default {
   animation-duration: 1s;
   animation-iteration-count: infinite;
   animation-direction: alternate;
-  animation-timing-function: cubic-bezier(.75,-0.01,.59,.99); 
+  animation-timing-function: cubic-bezier(.75, -0.01, .59, .99);
 }
 
 @keyframes preloader {
