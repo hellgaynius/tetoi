@@ -94,7 +94,7 @@
   overflow-wrap: break-word;
   &.removed {
     opacity: 0;
-    transition: opacity 3s ease;
+    transition: opacity 3s;
   }
   &:hover {
     opacity: 1;
