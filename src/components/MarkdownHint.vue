@@ -31,8 +31,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .markdown-hint {
   display: grid;
@@ -46,6 +44,7 @@ export default {
   padding: 25px;
   color: colors.$secondary-darker;
   border: 3px solid colors.$secondary;
+  background-color: colors.$app-background;
   .ruleset {
     list-style-type: none;
     margin: 0;

@@ -82,43 +82,60 @@ export default {
 
 <style lang="scss">
 @use '@/assets/colors';
-@import '@/assets/global';
+@use '@/assets/breakpoints';
 
 .confirmation-overlay {
   position: fixed;
   z-index: 15;
   width: 100%;
-  height: 100vh;
-  background-image: url(../../../background-pattern.png);
+  height: 100%;
+  background-image: url(../../../overlay-background-pattern.png);
+  .confirmation-window {
+    position: fixed;
+    z-index: 16;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    width: 450px;
+    height: 250px;
+    padding: 50px;
+    background-image: url(../../../light-background-pattern.png);
+    border: 3px solid colors.$active-button-background;
+    box-shadow: 5px 5px colors.$active-button-background;
+    color: colors.$secondary-darker;
+  }
+  .question {
+    margin: 0 auto;
+    text-align: center;
+    font-size: 40px;
+  }
+  .buttons-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: space-around;
+    gap: 40px;
+    padding-top: 50px;
+    font-size: 20px;
+  }
 }  
-.confirmation-window {
-  position: fixed;
-  z-index: 16;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  width: 450px;
-  height: 250px;
-  padding: 50px;
-  background-image: url(../../../app-background-pattern.png);
-  border: 3px solid colors.$active-button-background;
-  box-shadow: 5px 5px colors.$active-button-background;
-  color: colors.$secondary-darker;
-}
-.question {
-  margin: 0 auto;
-  text-align: center;
-  font-size: 3em;
-}
-.buttons-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  justify-content: space-around;
-  gap: 40px;
-  padding-top: 50px;
-  font-size: 20px;
-}
+
 .scroll-off {
   overflow: hidden;
+}
+
+@media #{breakpoints.$s-media} {
+  .confirmation-overlay {
+    .confirmation-window {
+      width: 350px;
+      height: 200px;
+    }
+    .question {
+      font-size: 30px;
+    }
+    .buttons-container {
+      gap: 30px;
+      padding-top: 30px;
+    }
+  }
 }
 </style>

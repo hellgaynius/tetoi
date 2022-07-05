@@ -177,7 +177,7 @@ export default {
         </div>
         <div class="third-grid-column">
           <AppButton
-            class="action-button"
+            class="action-button third-grid-column"
             :disabled="isRequestOngoing"
             link-like
             @click="deleteProject"
@@ -193,8 +193,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .buttons-wrapper {
   display: grid;
@@ -215,7 +213,7 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .third-grid-column {
-    text-align: center;
+    text-align: center !important;
   }
 }
 </style>

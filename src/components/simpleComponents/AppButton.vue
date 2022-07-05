@@ -26,8 +26,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .app-button {
   display: block;
@@ -37,12 +35,13 @@ export default {
   border: none;
   letter-spacing: 1px;
   background-color: transparent;
-  transition: color 0.2s, box-shadow 0.2s border 0.2s;
+  transition: color 0.2s, box-shadow 0.2s, border 0.2s;
   &.button-like {
     padding: 10px 15px;
     border: 1px solid colors.$active-button-background;
     box-shadow: 3px 3px colors.$active-button-background;
     color: colors.$secondary-darker;
+    background-color: colors.$app-background;
     cursor: pointer;
     &:hover {
       border: 1px solid colors.$active-button-hover;

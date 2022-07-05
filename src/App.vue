@@ -291,8 +291,9 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
 @import '@/assets/global';
+@import '@/assets/rendered-preview';
+@import '@/assets/app-transition';
 
 .app {
   display: flex;
@@ -365,6 +366,7 @@ export default {
       min-width: 370px;
       padding: 40px 10px 80px 10px;
       box-shadow: none;
+      border: none;
     }
     .project-status {
       padding: 20px;

@@ -89,8 +89,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .result-images {
   .save-image-hint {
@@ -118,9 +116,9 @@ export default {
     width: 60px;
     aspect-ratio: var(--preview-aspect-ratio);
     cursor: pointer;
-    @include solid-border;
+    border: 1px solid colors.$border;
     &.current {
-      @include light-shadow;
+      box-shadow: 4px 4px 0 colors.$el-shadow;
     }
     &.filled {
       border: 1px solid colors.$secondary-darker;
