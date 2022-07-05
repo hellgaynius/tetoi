@@ -5,6 +5,8 @@ import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
 import AppPreloader from '@/components/simpleComponents/AppPreloader.vue'
 import AppNotification from '@/components/simpleComponents/AppNotification.vue'
+import AppConfirmation from '@/components/simpleComponents/AppConfirmation.vue'
+import { useConfirmation, modalOn, modalOff } from '@/processes/confirmation.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
@@ -15,10 +17,19 @@ export default {
   components: {
     AppPreloader,
     AppNotification,
+    AppConfirmation,
     TextTransformator,
     MarkdownHint,
     ResultImages,
     ProjectActions,
+  },
+
+  setup() {
+    return  {
+      confirmation: useConfirmation(),
+      modalOn,
+      modalOff,
+    };
   },
 
   data() {
@@ -78,12 +89,14 @@ export default {
       if (!serverProject) {
         this.projectId = null;
         localProject = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
+      };
 
+      if (localProject) {
         this.showNotification({
           type: 'info',
           text: `Project is saved locally for this browser. <br>
             To have access from everywhere, publish your project.`,
-        })
+        });
       };
 
       const project = serverProject || localProject;
@@ -197,6 +210,10 @@ export default {
       this.setInitialPost(),
       this.currentSlotIndex = 0;
       this.images = [];
+      this.showNotification({
+        type: 'info',
+        text: 'Your project was reset',
+      });
     },
   },
 };
@@ -208,8 +225,14 @@ export default {
     :notification="notification"
     @close-notification="closeNotification"
   />
+  <AppConfirmation
+    :is-active="confirmation.isModalOn"
+    @close-confirmation="modalOff"
+  />
   <div class="app">
-    <h1 class="logo">tetoi</h1>
+    <h1 class="logo"
+    @click="modalOn"
+    >tetoi</h1>
     <main class="main">
       <div 
         class="preloader-mask"
@@ -277,7 +300,14 @@ export default {
   .logo {
     position: absolute;
     left: 100px;
-    font: bold small-caps 76px 'Marcellus SC', serif;
+    font: bold 76px 'Chakra Petch', sans-serif;
+    background-image: linear-gradient(colors.$main-active, colors.$secondary);
+    background-size: 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    -moz-text-fill-color: transparent;
   }
   .main {
     position: relative;
@@ -288,8 +318,8 @@ export default {
     margin: 50px auto 150px auto;
     padding: 50px 50px 80px 50px;
     background-color: colors.$app-background;
-    border-radius: var(--main-border-radius);
     box-shadow: 10px 10px colors.$secondary;
+    border: 2px solid colors.$secondary;
   }
   .preloader-mask {
     position: absolute;
@@ -308,7 +338,7 @@ export default {
   .status-text {
     letter-spacing: 4px;
     &.saved {
-      color: colors.$secondary-active;
+      color: colors.$main-active;
     }
     &.unsaved {
       color: colors.$secondary-darker;

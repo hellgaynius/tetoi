@@ -1,5 +1,6 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
+import { ask, modalOff } from '@/processes/confirmation';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 
@@ -24,6 +25,7 @@ export default {
     'set-publish-status',
     'reset-project', 
     'show-notification',
+    'show-confirmation',
   ],
 
   computed: {
@@ -87,35 +89,46 @@ export default {
         });
     },
 
-    deleteProject() {
-      this.$emit('set-request-status', true);
+    async deleteProject() {
+      if (await ask()) {
+        modalOff();
+        this.$emit('set-request-status', true);
 
-      projectApi.delete(this.projectId)
-        .then(() => {
-          window.history.replaceState({}, '', window.location.origin);
-          this.resetProject();
-          this.$emit('show-notification', {
-              type: 'info',
-              text: `Project ${this.projectId} deleted`,
-            });
-          this.$emit('set-project-id', null);
-          this.$emit('set-save-status', false);
-          this.$emit('set-publish-status', false);
-        })
-        .catch(error => {
-          this.$emit('show-notification', {
-              type: 'warning',
-              text: error,
-            });
-        })
-        .finally(() => {
-          this.$emit('set-request-status', false);
-        });
+        projectApi.delete(this.projectId)
+          .then(() => {
+            window.history.replaceState({}, '', window.location.origin);
+            browserStorage.reset();
+            this.$emit('reset-project');
+            this.$emit('show-notification', {
+                type: 'info',
+                text: `Project ${this.projectId} deleted`,
+              });
+            this.$emit('set-project-id', null);
+            this.$emit('set-save-status', false);
+            this.$emit('set-publish-status', false);
+          })
+          .catch(error => {
+            this.$emit('show-notification', {
+                type: 'warning',
+                text: error,
+              });
+          })
+          .finally(() => {
+            this.$emit('set-request-status', false);
+          });  
+      } else {
+        modalOff();
+      };
     },
 
-    resetProject() {
-      browserStorage.reset();
-      this.$emit('reset-project');
+    async resetProject() {
+      if (await ask()) {
+        modalOff();
+        browserStorage.reset();
+        this.$emit('reset-project');
+      } else {
+        modalOff();
+      };
     },
   },
 }

@@ -58,7 +58,7 @@ export default {
       if (newValue) {
         this.buildDependentEntitiesForSlotDebounced();
       } else {
-        this.renderedPreview = '';
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
       };
     },
 
@@ -101,7 +101,7 @@ export default {
     },
 
     renderPreview(slotIndex) {
-      this.renderedPreview = markdown.render(this.post.slots[slotIndex].text);
+      this.renderedPreview = markdown.render(this.post.slots[slotIndex]?.text);
     },
 
     async saveImageToSlot(slotIndex) {
@@ -163,7 +163,7 @@ export default {
             :value="currentTextValue"
             @input="saveSlotText"
             class="field current"
-            placeholder="Style text here"
+            placeholder="Write text here"
           ></textarea>
         </label>
       </div>
@@ -301,7 +301,8 @@ export default {
   .preview-wrapper {
     &.border {
       border: 1px solid black;
-        @include solid-border; 
+      margin-bottom: 10px;
+      @include solid-border; 
     }
     &.padding {
       width: var(--preview-width);
@@ -329,6 +330,7 @@ export default {
     color: colors.$main;
     font-size: 14px;
     font-variant-caps: all-small-caps;
+    letter-spacing: 2px;
     border-radius: 5px;
     @include radial-shadow;
   }

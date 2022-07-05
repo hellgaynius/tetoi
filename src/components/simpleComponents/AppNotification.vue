@@ -103,7 +103,7 @@
   &.warning {
     box-shadow: 3px 3px 0 colors.$warning;
     border: 2px solid colors.$warning;
-    color: colors.$warning;
+    color: colors.$secondary-darker;
     & .close-icon {
       border: 1px solid colors.$warning;
       &::before {
@@ -117,7 +117,7 @@
   &.info {
     box-shadow: 3px 3px 0 colors.$info;
     border: 2px solid colors.$info;
-    color: colors.$info;
+    color: colors.$secondary-darker;
     & .close-icon {
       border: 1px solid colors.$info;
       &::before {
