@@ -3,7 +3,6 @@ import { DeferredBoolean } from '@/utils/utils.js';
 
 const confirmation = reactive({
   isModalOn: false,
-  modalPromise: new DeferredBoolean,
 });
 
 export const useConfirmation = () => {
