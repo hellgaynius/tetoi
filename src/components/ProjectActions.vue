@@ -1,6 +1,6 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import { ask, modalOff } from '@/processes/confirmation';
+import { ask } from '@/processes/confirmation';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 
@@ -25,7 +25,6 @@ export default {
     'set-publish-status',
     'reset-project', 
     'show-notification',
-    'show-confirmation',
   ],
 
   computed: {
@@ -91,7 +90,6 @@ export default {
 
     async deleteProject() {
       if (await ask()) {
-        modalOff();
         this.$emit('set-request-status', true);
 
         projectApi.delete(this.projectId)
@@ -116,18 +114,13 @@ export default {
           .finally(() => {
             this.$emit('set-request-status', false);
           });  
-      } else {
-        modalOff();
       };
     },
 
     async resetProject() {
       if (await ask()) {
-        modalOff();
         browserStorage.reset();
         this.$emit('reset-project');
-      } else {
-        modalOff();
       };
     },
   },

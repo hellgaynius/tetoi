@@ -6,7 +6,6 @@ import MarkdownHint from '@/components/MarkdownHint.vue';
 import AppPreloader from '@/components/simpleComponents/AppPreloader.vue'
 import AppNotification from '@/components/simpleComponents/AppNotification.vue'
 import AppConfirmation from '@/components/simpleComponents/AppConfirmation.vue'
-import { useConfirmation, modalOn, modalOff } from '@/processes/confirmation.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
@@ -22,14 +21,6 @@ export default {
     MarkdownHint,
     ResultImages,
     ProjectActions,
-  },
-
-  setup() {
-    return  {
-      confirmation: useConfirmation(),
-      modalOn,
-      modalOff,
-    };
   },
 
   data() {
@@ -225,14 +216,11 @@ export default {
     :notification="notification"
     @close-notification="closeNotification"
   />
-  <AppConfirmation
-    :is-active="confirmation.isModalOn"
-    @close-confirmation="modalOff"
-  />
+  <AppConfirmation />
   <div class="app">
-    <h1 class="logo"
-    @click="modalOn"
-    >tetoi</h1>
+    <h1 class="logo">
+      tetoi
+    </h1>
     <main class="main">
       <div 
         class="preloader-mask"
@@ -353,7 +341,6 @@ export default {
       position: static;
       min-width: 370px;
       padding-top: 30px;
-      font-size: 66px;
       text-align: center;
     }
   }
@@ -364,7 +351,7 @@ export default {
     .main {
       width: 100%;
       min-width: 370px;
-      padding: 40px 10px 80px 10px;
+      padding: 40px 20px 80px 10px;
       box-shadow: none;
       border: none;
     }
