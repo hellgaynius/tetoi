@@ -1,7 +1,7 @@
 export const markdownRules = {
   rulesets: {
     headings: { 
-      label: 'Headings',
+      label: 'Headings:',
       name: 'headings',
       rules: [
         '# biggest', 

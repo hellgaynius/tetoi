@@ -35,6 +35,7 @@ export default {
       isBigScreen: window.matchMedia('(min-width: 600px)').matches,
       isCopiedPopupHidden: true,
       isCopiedPopupInvisible: false,
+      isTextOverflowing: false,
       renderedPreview: '',
     }
   },
@@ -58,7 +59,7 @@ export default {
       if (newValue) {
         this.buildDependentEntitiesForSlotDebounced();
       } else {
-        this.renderedPreview = '';
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
       };
     },
 
@@ -70,7 +71,7 @@ export default {
   },
 
   mounted() {
-    imageCreation.init(this.$refs.preview);
+    imageCreation.init(this.$refs.previewForConverting);
     
     if (this.isProjectLoaded) {
       this.createInitialImages();
@@ -101,7 +102,15 @@ export default {
     },
 
     renderPreview(slotIndex) {
-      this.renderedPreview = markdown.render(this.post.slots[slotIndex].text);
+      this.renderedPreview = markdown.render(this.post.slots[slotIndex]?.text);
+      this.checkTextOverflow();
+    },
+
+    async checkTextOverflow() {
+      await this.$nextTick();
+
+      this.isTextOverflowing = 
+        this.$refs.previewContainer.offsetHeight - this.$refs.renderedPreview.offsetHeight < 0;
     },
 
     async saveImageToSlot(slotIndex) {
@@ -118,7 +127,7 @@ export default {
     },
 
     buildDependentEntitiesForSlotDebounced: debounce(RENDER_TEXT_DELAY, function() {
-        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
+      this.buildDependentEntitiesForSlot(this.currentSlotIndex);
     }),
 
     downloadImage() {
@@ -163,7 +172,7 @@ export default {
             :value="currentTextValue"
             @input="saveSlotText"
             class="field current"
-            placeholder="Style text here"
+            placeholder="Write text here"
           ></textarea>
         </label>
       </div>
@@ -183,15 +192,29 @@ export default {
       <div class="preview-label">
         Preview:
       </div>
-      <div class="preview-wrapper border">
+      <div 
+        class="preview-wrapper border"
+        :class="{ 'text-overflow': isTextOverflowing }"
+      >
         <div 
           class="preview-wrapper padding"
-          ref="preview"
+          ref="previewForConverting"
         >
+          <span 
+            class="overflow-warning-text"
+            v-show="isTextOverflowing"
+          >
+            text does not fit in
+          </span>
           <div 
-            class="preview"
-            v-html="renderedPreview"
-          ></div>
+            ref="previewContainer"
+            class="rendered-preview"
+          >
+            <div
+              v-html="renderedPreview"
+              ref="renderedPreview"
+            ></div>
+          </div>
         </div>
       </div>
       <div class="buttons">
@@ -225,10 +248,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
-@import '@/assets/preview';
-@import '@/assets/app-transition';
 
 .text-transformator {
   display: flex;
@@ -278,9 +297,9 @@ export default {
     resize: none;
     border-radius: unset;
     transition: box-shadow 0.2s;
-    @include solid-border;
+    border: 1px solid colors.$border;
     &:focus-visible {
-      @include light-shadow;
+      box-shadow: 4px 4px 0 colors.$el-shadow;
       outline: none;
     }
   }
@@ -300,8 +319,11 @@ export default {
   }
   .preview-wrapper {
     &.border {
-      border: 1px solid black;
-        @include solid-border; 
+      margin-bottom: 10px;
+      border: 1px solid colors.$border;
+      &.text-overflow {
+        border-color: colors.$warning;
+      }
     }
     &.padding {
       width: var(--preview-width);
@@ -311,6 +333,13 @@ export default {
       background-color: colors.$secondary-light;
     }
   } 
+  .overflow-warning-text {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: colors.$warning;
+  }
   .buttons {
     display: flex;
     justify-content: flex-end;
@@ -329,8 +358,9 @@ export default {
     color: colors.$main;
     font-size: 14px;
     font-variant-caps: all-small-caps;
+    letter-spacing: 2px;
     border-radius: 5px;
-    @include radial-shadow;
+    box-shadow: 0 0 10px colors.$secondary-darker;
   }
 }
 

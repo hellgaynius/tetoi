@@ -9,30 +9,28 @@ export default {
 </script>
 
 <template>
-  <div class="markdown-hint">
-    <div
-      v-for="ruleset in markdownRules.rulesets"
-      :class="ruleset.name"
-    >
-      <h4> 
-        {{ ruleset.label }}
-      </h4>
-      <ul class="ruleset">
-        <li 
-          class="rule"
-          v-for="rule in ruleset.rules"
-          v-html="rule"
-        ></li>
-      </ul>
-    </div>
+<div class="markdown-hint">
+  <div
+    v-for="ruleset in markdownRules.rulesets"
+    :class="ruleset.name"
+  >
+    <h4> 
+      {{ ruleset.label }}
+    </h4>
+    <ul class="ruleset">
+      <li 
+        class="rule"
+        v-for="rule in ruleset.rules"
+        v-html="rule"
+      ></li>
+    </ul>
   </div>
+</div>
 </template>
 
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .markdown-hint {
   display: grid;
@@ -45,8 +43,8 @@ export default {
   margin: 0 auto 20px auto;
   padding: 25px;
   color: colors.$secondary-darker;
-  background-color: colors.$markdown-background;
-  border-radius: 10px;
+  border: 3px solid colors.$secondary;
+  background-color: colors.$app-background;
   .ruleset {
     list-style-type: none;
     margin: 0;

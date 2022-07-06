@@ -1,5 +1,6 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
+import { ask } from '@/processes/confirmation';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 
@@ -87,35 +88,40 @@ export default {
         });
     },
 
-    deleteProject() {
-      this.$emit('set-request-status', true);
+    async deleteProject() {
+      if (await ask()) {
+        this.$emit('set-request-status', true);
 
-      projectApi.delete(this.projectId)
-        .then(() => {
-          window.history.replaceState({}, '', window.location.origin);
-          this.resetProject();
-          this.$emit('show-notification', {
-              type: 'info',
-              text: `Project ${this.projectId} deleted`,
-            });
-          this.$emit('set-project-id', null);
-          this.$emit('set-save-status', false);
-          this.$emit('set-publish-status', false);
-        })
-        .catch(error => {
-          this.$emit('show-notification', {
-              type: 'warning',
-              text: error,
-            });
-        })
-        .finally(() => {
-          this.$emit('set-request-status', false);
-        });
+        projectApi.delete(this.projectId)
+          .then(() => {
+            window.history.replaceState({}, '', window.location.origin);
+            browserStorage.reset();
+            this.$emit('reset-project');
+            this.$emit('show-notification', {
+                type: 'info',
+                text: `Project ${this.projectId} deleted`,
+              });
+            this.$emit('set-project-id', null);
+            this.$emit('set-save-status', false);
+            this.$emit('set-publish-status', false);
+          })
+          .catch(error => {
+            this.$emit('show-notification', {
+                type: 'warning',
+                text: error,
+              });
+          })
+          .finally(() => {
+            this.$emit('set-request-status', false);
+          });  
+      };
     },
 
-    resetProject() {
-      browserStorage.reset();
-      this.$emit('reset-project');
+    async resetProject() {
+      if (await ask()) {
+        browserStorage.reset();
+        this.$emit('reset-project');
+      };
     },
   },
 }
@@ -164,7 +170,7 @@ export default {
         </div>
         <div class="third-grid-column">
           <AppButton
-            class="action-button"
+            class="action-button third-grid-column"
             :disabled="isRequestOngoing"
             link-like
             @click="deleteProject"
@@ -180,8 +186,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .buttons-wrapper {
   display: grid;
@@ -202,7 +206,7 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .third-grid-column {
-    text-align: center;
+    text-align: center !important;
   }
 }
 </style>

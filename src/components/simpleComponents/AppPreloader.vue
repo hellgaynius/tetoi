@@ -35,8 +35,8 @@ export default {
   background: radial-gradient(
     circle at 50%, 
     colors.$app-shadow, 
-    colors.$secondary, 
-    transparent
+    colors.$main-active,
+    transparent,
   );
   animation-name: preloader;
   animation-duration: 1s;

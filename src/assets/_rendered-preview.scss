@@ -1,8 +1,7 @@
 @use './colors';
 @use './breakpoints';
-@import './mixins';
 
-.preview {
+.rendered-preview {
   width: calc(var(--preview-width) - (var(--preview-wrapper-padding) * 2));
   aspect-ratio: var(--preview-aspect-ratio);
   margin: 0;
