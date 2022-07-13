@@ -1,4 +1,5 @@
 <script>
+import PreviewSettings from '@/components/PreviewSettings.vue';
 import TextTransformator from '@/components/TextTransformator.vue';
 import ResultImages from '@/components/ResultImages.vue';
 import ProjectActions from '@/components/ProjectActions.vue';
@@ -11,12 +12,13 @@ import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
 export default {
-  LOCAL_STORAGE_ITEM_NAME: 'localProject',
+  LOCAL_PROJECT_ITEM_NAME: 'localProject',
 
   components: {
     AppPreloader,
     AppNotification,
     AppConfirmation,
+    PreviewSettings,
     TextTransformator,
     MarkdownHint,
     ResultImages,
@@ -31,6 +33,10 @@ export default {
       isProjectLoaded: false,
       projectId: null,
       isMarkdownHintHidden: true,
+      areSettingsHidden: true,
+      isRerenderRequired: false,
+      isCreateBulkImagesRequested: false,
+      isRenderOngoing: false,
       notification: {
         show: false,
         type: 'info',
@@ -39,6 +45,8 @@ export default {
       post: {},
       images: {},
       currentSlotIndex: 0,
+      previewSettings: {},
+      previewSettingsChangeCounter: 0,
     }
   },
 
@@ -46,6 +54,44 @@ export default {
     isProjectFilled() {
       return !!(this.post?.fullText ||
         this.post?.slots.some(slot => slot.text));
+    },
+  },
+
+  watch: {
+    previewSettings: {
+      handler() {
+        if (this.isProjectFilled) {
+          this.previewSettingsChangeCounter++;
+        } else {
+          this.previewSettingsChangeCounter = 0;
+        } 
+      },
+
+      deep: true,
+    },
+
+    previewSettingsChangeCounter(value) {
+      if (value) {
+        this.isRerenderRequired = true;
+      } 
+    },
+
+    post: {
+      handler() {
+        browserStorage.handle(
+          this.isProjectFilled, 
+          this.isProjectPublished, 
+          this.$options.LOCAL_PROJECT_ITEM_NAME, 
+          this.post,
+        );
+
+        if (!this.isProjectFilled) {
+          this.previewSettingsChangeCounter = 0;
+          this.isRerenderRequired = false;
+        }
+      },
+
+      deep: true,
     },
   },
 
@@ -79,7 +125,7 @@ export default {
 
       if (!serverProject) {
         this.projectId = null;
-        localProject = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
+        localProject = browserStorage.fetch(this.$options.LOCAL_PROJECT_ITEM_NAME);
       };
 
       if (localProject) {
@@ -95,6 +141,7 @@ export default {
       if (project) {
         this.post = project;
       };
+
       this.isProjectLoaded = true;
     },
 
@@ -148,13 +195,10 @@ export default {
       if (this.isProjectPublished) {
         this.isProjectSaved = false;
       }
+    },
 
-      browserStorage.handle(
-        this.isProjectFilled, 
-        this.isProjectPublished, 
-        this.$options.LOCAL_STORAGE_ITEM_NAME, 
-        this.post,
-      );
+    toggleSettings() {
+      this.areSettingsHidden = !this.areSettingsHidden;
     },
 
     toggleMarkdownHint() {
@@ -197,6 +241,14 @@ export default {
       this.isProjectPublished = status;
     },
 
+    setRenderingStatus(status) {
+      this.isRenderOngoing = status;
+    },
+
+    setRenderingNeed(isNeeded) {
+      this.isRerenderRequired = isNeeded;
+    },
+
     resetProject() {
       this.setInitialPost(),
       this.currentSlotIndex = 0;
@@ -206,12 +258,20 @@ export default {
         text: 'Your project was reset',
       });
     },
+
+    acceptSettings(settings) {
+      this.previewSettings = settings;
+    },
+
+    requestCreateBulkImages() {
+      this.isCreateBulkImagesRequested = true;
+    },
   },
 };
 </script>
 
 <template>
-  <AppPreloader :is-active="isRequestOngoing" />
+  <AppPreloader :is-active="isRequestOngoing || isRenderOngoing" />
   <AppNotification
     :notification="notification"
     @close-notification="closeNotification"
@@ -223,9 +283,10 @@ export default {
     </h1>
     <main class="main">
       <div 
-        class="preloader-mask"
-        v-show="isRequestOngoing"
-      ></div>
+        class="app-preloader-mask"
+        v-show="isRenderOngoing"
+      >
+      </div>
       <div
         v-show="isProjectPublished"
         class="project-status"
@@ -239,6 +300,10 @@ export default {
           class="status-text unsaved"
         >unsaved</span>
       </div>
+      <PreviewSettings
+        v-show="!areSettingsHidden"
+        @pass-settings="acceptSettings"
+      />
       <TextTransformator
         :is-disabled="isRequestOngoing"
         :is-project-loaded="isProjectLoaded"
@@ -246,15 +311,25 @@ export default {
         :is-markdown-hint-hidden="isMarkdownHintHidden"
         :current-slot-index="currentSlotIndex"
         :post="post"
+        :preview-settings="previewSettings"
+        :are-settings-hidden="areSettingsHidden"
+        :is-create-bulk-images-requested="isCreateBulkImagesRequested"
+        :is-render-ongoing="isRenderOngoing"
+        @toggle-settings="toggleSettings"
         @toggle-markdown-hint="toggleMarkdownHint"
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
+        @set-rendering-status="setRenderingStatus"
+        @set-rendering-need="setRenderingNeed"
       />
       <MarkdownHint v-show="!isMarkdownHintHidden"/>
       <ResultImages
         :current-slot-index="currentSlotIndex"
         :images="images"
         :slots="post.slots"
+        :is-rerender-required="isRerenderRequired"
+        :is-project-filled="isProjectFilled"
+        @request-create-bulk-images="requestCreateBulkImages"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
@@ -280,7 +355,7 @@ export default {
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
 @import '@/assets/global';
-@import '@/assets/rendered-preview';
+@import '@/assets/preview-container';
 @import '@/assets/app-transition';
 
 .app {
@@ -310,14 +385,13 @@ export default {
     box-shadow: 10px 10px colors.$secondary;
     border: 2px solid colors.$secondary;
   }
-  .preloader-mask {
+  .app-preloader-mask {
     position: absolute;
     z-index: 9;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    border-radius: var(--main-border-radius);
     background-color: colors.$app-background;
     opacity: 0.5;
   }
@@ -341,6 +415,7 @@ export default {
       position: static;
       min-width: 370px;
       padding-top: 30px;
+      margin: 0;
       text-align: center;
     }
   }

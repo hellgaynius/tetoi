@@ -1,43 +1,49 @@
 @use './colors';
 @use './breakpoints';
 
-.rendered-preview {
-  width: calc(var(--preview-width) - (var(--preview-wrapper-padding) * 2));
-  aspect-ratio: var(--preview-aspect-ratio);
+.preview-container {
+  width: var(--rendered-preview-width);
+  height: 100%;
   margin: 0;
   overflow-wrap: break-word;
   overflow: hidden;
-  font-size: 15px;
-  font-family:'Segoe UI', Tahoma, Verdana, sans-serif;
+  --main-text-font-size: 16px;
+  --headings-font-size: 16px;
+  --main-text-line-height: 1.3;
+  --headings-line-height: 1.3;
+  --main-text-font-family: 'Finlandica', Verdana, sans-serif;
+  --headings-font-family: 'Finlandica', Verdana, sans-serif;
+  font-size: var(--main-text-font-size);
+  line-height: var(--main-text-line-height);
+  font-family: var(--main-text-font-family);
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    margin-block-start: 0;
-    margin-block-end: 0;
-    line-height: 1.15;
-    font-weight: normal;
     letter-spacing: 1px;
+    line-height: var(--headings-line-height);
+    font-family: var(--headings-font-family);
+    font-weight: normal;
   }
   h1 {
-    font-size: 4em;
+    font-size: calc(var(--headings-font-size) * 4);
   }
   h2 {
-    font-size: 3.5em;
+    font-size: calc(var(--headings-font-size) * 3.5);
   }
   h3 {
-    font-size: 3em;
+    font-size: calc(var(--headings-font-size) * 3);
   }
   h4 {
-    font-size: 2.5em;
+    font-size: calc(var(--headings-font-size) * 2.5);
   }
   h5 {
-    font-size: 2em;
+    font-size: calc(var(--headings-font-size) * 2);
   }
   h6 {
-    font-size: 1.5em;
+    font-size: calc(var(--headings-font-size) * 1.5);
   }
   ol,
   ul {

@@ -8,14 +8,17 @@ export default {
   },
 
   props: {
-    slots: Object,
+    slots: Array,
     images: Object,
     currentSlotIndex: Number,
+    isRerenderRequired: Boolean,
+    isProjectFilled: Boolean,
   },
 
   emits: [
     'change-current-slot-index', 
     'remove-slot',
+    'request-create-bulk-images',
   ],
 
   methods: {
@@ -26,18 +29,24 @@ export default {
           id: nanoid(),
         }
       );
+
+      this.$emit('change-current-slot-index', this.slots.length - 1);
     },
 
     chooseSlot(index) {
       this.$emit('change-current-slot-index', index);
-    }
+    },
+
+    removeSlot(id) {
+      this.$emit('remove-slot', id);
+    },
   },
 }
 </script>
 
 <template>
  <div class="result-images">
-    <div class="save-image-hint">
+    <div class="optional-notification save-image-hint">
       To save full-sized picture to your phone gallery, 
       long-press on the miniature and choose the option from menu.
     </div>
@@ -66,7 +75,7 @@ export default {
             class="remove-slot"
             link-like
             v-show="slots.length > 1"
-            @click="$emit('remove-slot', slot.id)"
+            @click="removeSlot(slot.id)"
           >
             delete
           </AppButton>
@@ -83,6 +92,22 @@ export default {
         ></button>
       </div>
     </div>
+    <div 
+      class="optional-notification rerender-offer"
+      v-show="isRerenderRequired && isProjectFilled"
+    >
+      <div>
+        These miniature images are outdated,
+        however one will be updated once you click on it. <br />
+        Or you may update them all at once.
+      </div>
+      <AppButton
+        button-like
+        @click="$emit('request-create-bulk-images')"
+      >
+        update all at once!
+      </AppButton>
+    </div>
   </div>
 </template>
 
@@ -91,21 +116,27 @@ export default {
 @use '@/assets/breakpoints';
 
 .result-images {
-  .save-image-hint {
-    display: none;
-    margin: 0 30px;
+  .optional-notification {
+    margin: 0 30px 30px 30px;
     padding: 20px 30px;
-    border-radius: 7px;
     box-shadow: 3px 3px 0 colors.$secondary;
     border: 2px solid colors.$secondary;
     color: colors.$secondary-darker;
+    overflow-wrap: break-word;
+    &.save-image-hint {
+      display: none;
+    }
+    &.rerender-offer {
+      display: grid;
+      grid-template-columns: 5fr 3fr;
+      gap: 30px;
+    }
   }
   .carousel {
     display: flex;
     justify-content: right;
     gap: 11px;
     width: 100%;
-    padding: 30px 0;
   }  
   .slot-wrapper {
     &:hover .remove-slot {
@@ -131,7 +162,7 @@ export default {
     display: none;
     min-width: 0;
     margin: 0 auto;
-    padding: 15px 0px;
+    padding: 15px 0;
     font-size: 10px;
   }
   .add-slot {
@@ -187,8 +218,14 @@ export default {
 @media #{breakpoints.$s-media} {
   .result-images {
     order: -1;
-    .save-image-hint {
-      display: block;
+    .optional-notification {
+      &.rerender-offer {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      &.save-image-hint {
+        display: block;
+      }
     }
   }
 }

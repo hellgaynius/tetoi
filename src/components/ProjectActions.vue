@@ -143,14 +143,15 @@ export default {
           </AppButton>
         </div>
         <div class="third-grid-column">
-          <AppButton
-            class="action-button"
-            :disabled="isLocalProjectButtonDisabled"
-            link-like
-            @click="resetProject"
-          >
-            reset project
-          </AppButton>
+          <div class="single-button-wrapper action-button">
+            <AppButton
+              :disabled="isLocalProjectButtonDisabled"
+              link-like
+              @click="resetProject"
+            >
+              reset project
+            </AppButton>
+          </div>
         </div>
 
       </div>
@@ -169,14 +170,15 @@ export default {
           </AppButton>
         </div>
         <div class="third-grid-column">
-          <AppButton
-            class="action-button third-grid-column"
-            :disabled="isRequestOngoing"
-            link-like
-            @click="deleteProject"
-          >
-            delete saved project
-          </AppButton>
+          <div class="single-button-wrapper action-button">
+            <AppButton
+              :disabled="isRequestOngoing"
+              link-like
+              @click="deleteProject"
+            >
+              delete saved project
+            </AppButton>
+          </div>
         </div>
       </div>
     </div>
@@ -202,11 +204,15 @@ export default {
   .third-grid-column {
     grid-column-start: 3;
   }
+  .single-button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 
 @media #{breakpoints.$s-media} {
-  .third-grid-column {
-    text-align: center !important;
+  .single-button-wrapper {
+    justify-content: center;
   }
 }
 </style>

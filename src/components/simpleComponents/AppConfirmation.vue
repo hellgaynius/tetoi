@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import { modalPromise } from '@/processes/confirmation.js'
-import { useConfirmation, modalOff } from '@/processes/confirmation';
+import { useConfirmation, confirmation, modalOff } from '@/processes/confirmation';
 
 export default {
   components: {

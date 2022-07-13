@@ -7,6 +7,7 @@ import { debounce } from 'throttle-debounce';
 markdown.init();
 
 const RENDER_TEXT_DELAY = 1000;
+const RENDER_BULK_IMAGES_DELAY = 2000;
 
 export default {
   COPIED_REMOVE_DELAY: 2000,
@@ -20,14 +21,21 @@ export default {
     isProjectLoaded: Boolean,
     isProjectFilled: Boolean,
     isMarkdownHintHidden: Boolean,
+    areSettingsHidden: Boolean,
+    isCreateBulkImagesRequested: Boolean,
+    isRenderOngoing: Boolean,
     currentSlotIndex: Number,
     post: Object,
+    previewSettings: Object,
   },
 
   emits: [
     'toggle-markdown-hint', 
+    'toggle-settings',
     'save-text', 
     'change-slot-image',
+    'set-rendering-status',
+    'set-rendering-need',
   ],
 
   data() {
@@ -65,8 +73,24 @@ export default {
 
     isProjectLoaded(newValue) {
       if (newValue) {
-        this.createInitialImages();
+        this.createBulkImages();
       };
+    },
+
+    previewSettings: {
+      handler() {
+        this.$nextTick()
+          .then(
+            () => this.checkTextOverflow()
+          );
+      },
+
+      deep: true,
+    },
+
+    isCreateBulkImagesRequested() {
+
+      this.createBulkImages();
     },
   },
 
@@ -74,11 +98,15 @@ export default {
     imageCreation.init(this.$refs.previewForConverting);
     
     if (this.isProjectLoaded) {
-      this.createInitialImages();
+      this.createBulkImages();
     };
   },
 
   methods: {
+    toggleSettings() {
+      this.$emit('toggle-settings');
+    },
+
     toggleMarkdownHint() {
       this.$emit('toggle-markdown-hint');
     },
@@ -91,7 +119,9 @@ export default {
       this.$emit('save-text', event.target.value);
     },
 
-    async createInitialImages() {
+    async createBulkImages() {
+      this.$emit('set-rendering-status', true);
+
       for (let i = 0; i < this.post.slots.length; i++) {
         if (this.post.slots[i].text) {
           await this.buildDependentEntitiesForSlot(i);
@@ -99,7 +129,13 @@ export default {
       };
 
       this.renderPreview(this.currentSlotIndex);
+      this.$emit('set-rendering-status', false);
+      this.$emit('set-rendering-need', false);
     },
+
+    createBulkImagesDebounced: debounce(RENDER_BULK_IMAGES_DELAY, function() {
+      this.createBulkImages();
+    }),
 
     renderPreview(slotIndex) {
       this.renderedPreview = markdown.render(this.post.slots[slotIndex]?.text);
@@ -189,26 +225,59 @@ export default {
       </div>
     </div>
     <div class="preview-block">
+      <div class="single-button-wrapper">
+        <AppButton 
+          link-like
+          settings
+          @click="toggleSettings"
+        >
+          <span v-if="areSettingsHidden">show </span>
+          <span v-else>hide </span>
+          text settings
+        </AppButton>
+      </div>
       <div class="preview-label">
         Preview:
       </div>
       <div 
         class="preview-wrapper border"
         :class="{ 'text-overflow': isTextOverflowing }"
-      >
+      > 
+        <span 
+          class="overflow-warning-text"
+          v-show="isTextOverflowing"
+        >
+          text does not fit in
+        </span>
+        <div 
+          class="preloader-mask"
+          v-show="isRenderOngoing"
+        >
+          <div class="preview-preloader centered">
+            Rendering . . .
+          </div>
+        </div>
         <div 
           class="preview-wrapper padding"
           ref="previewForConverting"
+          :style="`
+            padding-left: ${previewSettings.paddingLeft}px;
+            padding-right: ${previewSettings.paddingRight}px;
+            padding-bottom: ${previewSettings.paddingBottom}px;
+            padding-top: ${previewSettings.paddingTop}px;
+          `"
         >
-          <span 
-            class="overflow-warning-text"
-            v-show="isTextOverflowing"
-          >
-            text does not fit in
-          </span>
           <div 
             ref="previewContainer"
-            class="rendered-preview"
+            class="preview-container"
+            :style="`
+              --main-text-font-size: ${previewSettings.mainTextFontSize}px;
+              --headings-font-size: ${previewSettings.headingsFontSize}px;
+              --main-text-line-height: ${previewSettings.mainTextLineHeight};
+              --headings-line-height: ${previewSettings.headingsLineHeight};
+              --main-text-font-family: ${previewSettings.mainTextFont}, ${previewSettings.mainTextFontFallback};
+              --headings-font-family: ${previewSettings.headingsFont}, ${previewSettings.headingsFontFallback};
+            `"
           >
             <div
               v-html="renderedPreview"
@@ -235,7 +304,7 @@ export default {
       </div>
       <Transition name="fade-copied">
         <div 
-          class="copied-notification"
+          class="copied-notification centered"
           v-if="!isCopiedPopupHidden"
         >
           copied
@@ -248,6 +317,7 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
+@import '@/assets/fonts';
 
 .text-transformator {
   display: flex;
@@ -270,6 +340,9 @@ export default {
       (var(--preview-width) / var(--preview-aspect-ratio)) 
       + var(--preview-padding) 
       + var(--preview-width-border)
+      + var(--label-padding-bottom)
+      + var(--font-size)
+      * var(--line-height)
     ); 
   }
   .field-container {
@@ -279,7 +352,7 @@ export default {
       flex-grow: 1;
     }
     &.current {
-      flex-grow: 2;
+      flex-grow: 3;
     }
   }
   .field-title {
@@ -287,7 +360,7 @@ export default {
     font-weight: 100;
     padding-bottom: var(--label-padding-bottom);
     padding-top: var(--label-padding-top);
-    color: colors.$secondary-darker;
+    color: colors.$dark;
   }
   .field {
     display: block;
@@ -298,9 +371,9 @@ export default {
     border-radius: unset;
     transition: box-shadow 0.2s;
     border: 1px solid colors.$border;
+    font-family: 'Finlandica', Verdana, sans-serif;
     &:focus-visible {
       box-shadow: 4px 4px 0 colors.$el-shadow;
-      outline: none;
     }
   }
   .preview-block {
@@ -308,6 +381,10 @@ export default {
     flex-direction: column;
     padding-top: var(--preview-padding);
     position: relative;
+  }
+  .single-button-wrapper {
+    display: flex;
+    justify-content: flex-end;
   }
   .preview-label {
     display: none;
@@ -319,6 +396,7 @@ export default {
   }
   .preview-wrapper {
     &.border {
+      position: relative;
       margin-bottom: 10px;
       border: 1px solid colors.$border;
       &.text-overflow {
@@ -333,12 +411,45 @@ export default {
       background-color: colors.$secondary-light;
     }
   } 
+  .preloader-mask {
+    box-sizing: content-box;
+    position: absolute;
+    z-index: 8;
+    left: -1px;
+    top: -1px;
+    width: var(--preview-width);
+    aspect-ratio: var(--preview-aspect-ratio);
+    background-color: colors.$app-background;
+    border: 1px solid colors.$secondary;
+  }
+  .preview-preloader {
+    text-align: center;
+    font-size: 22px;
+    color: colors.$secondary-darker;
+    letter-spacing: 1px;
+    animation-name: preview-preloader;
+    animation-duration: 0.7s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: cubic-bezier(.75, -0.01, .59, .99);
+    @keyframes preview-preloader {
+      from {
+        opacity: 0.2;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
   .overflow-warning-text {
     position: absolute;
-    bottom: 70px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
+    padding: 0px 10px;
     color: colors.$warning;
+    background-color: colors.$app-background;
+    opacity: 0.9;
   }
   .buttons {
     display: flex;
@@ -349,10 +460,6 @@ export default {
   }
   .copied-notification {
     display: block;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
     padding: 10px 30px;
     background-color: colors.$secondary-darker;
     color: colors.$main;
@@ -362,11 +469,18 @@ export default {
     border-radius: 5px;
     box-shadow: 0 0 10px colors.$secondary-darker;
   }
+  .centered {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
 
 @media #{breakpoints.$s-media} {
   .text-transformator {
     flex-wrap: wrap;
+    padding-bottom: 0;
     .inner {
       min-width: var(--preview-width);
     }

@@ -3,13 +3,13 @@ export const browserStorage = {
     localStorage.clear();
   },
 
-  handle(isProjectFilled, isProjectPublished, itemName, post) {        
+  handle(isProjectFilled, isProjectPublished, itemName, object) {        
     if (!isProjectFilled) {
       this.reset();
     } else if (isProjectPublished) {
       return false;
     } else {
-      localStorage.setItem(itemName, JSON.stringify(post));
+      localStorage.setItem(itemName, JSON.stringify(object));
     }
   },
 
