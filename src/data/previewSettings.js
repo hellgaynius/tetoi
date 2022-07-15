@@ -2,58 +2,20 @@ export const previewSettings = {
   paddings: {
     name: 'Paddings',
     default: 20,
-    params: {
-      min: 20,
-      max: 80,
-      step: 1,
-    },
+    min: 20,
+    max: 80,
+    step: 1,
     sides: {
-      left: {
-        label: 'left:',
-        value: 20,
-      },
-      right: {
-        label: 'right:',
-        value: 20,
-      },
-      bottom: {
-        label: 'bottom:',
-        value: 20,
-      },
-      top: {
-        label: 'top:',
-        value: 20,
-      },
+      left: 'left:',
+      right: 'right:',
+      bottom: 'bottom:',
+      top: 'top:',
     },
   },
 
   textApplicants: {
-    headings: {
-      name: 'Headings',
-      class: 'headings',
-      font: {
-        value: 'Roboto',
-      },
-      fontSize: {
-        value: 16,
-      },
-      lineHeight: {
-        value: 1.3,
-      },
-    },
-    mainText: {
-      name:  'Main text',
-      class: 'main-text',
-      font: {
-        value: 'Alice',
-      },
-      fontSize: {
-        value: 16,
-      },
-      lineHeight: {
-        value: 1.3,
-      },
-    },
+    headings: 'Headings',
+    mainText: 'Main text'
   },
 
   fonts: {

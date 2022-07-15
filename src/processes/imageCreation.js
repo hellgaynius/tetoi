@@ -3,13 +3,13 @@ import domtoimage from 'dom-to-image';
 export const imageCreation = {
   options: {},
 
-  init(preview) {
+  init(previewEl) {
     this.options.scaleSize = 2;
-    this.options.preview = preview;
+    this.options.previewEl = previewEl;
   
     this.options.compilation = {
-      width: this.options.preview.clientWidth * this.options.scaleSize,
-      height: this.options.preview.clientHeight * this.options.scaleSize,
+      width: this.options.previewEl.clientWidth * this.options.scaleSize,
+      height: this.options.previewEl.clientHeight * this.options.scaleSize,
       style: { 
         transform: `scale(${this.options.scaleSize})`, 
         transformOrigin: 'top left'
@@ -18,14 +18,14 @@ export const imageCreation = {
   },  
 
   generateUrl() {
-    return domtoimage.toPng(this.options.preview, this.options.compilation)
+    return domtoimage.toPng(this.options.previewEl, this.options.compilation)
       .then(dataUrl => {
         return dataUrl;
     });
   },
 
   download(fileName) {
-    domtoimage.toPng(this.options.preview, this.options.compilation)
+    domtoimage.toPng(this.options.previewEl, this.options.compilation)
       .then(dataUrl => { 
         const linkEl = document.createElement('a');
 
@@ -36,7 +36,7 @@ export const imageCreation = {
   },
 
   copy() {
-    domtoimage.toBlob(this.options.preview, this.options.compilation)
+    domtoimage.toBlob(this.options.previewEl, this.options.compilation)
       .then(blob => {
         navigator.clipboard.write([new ClipboardItem({ 'image/png' : blob })]);
       });

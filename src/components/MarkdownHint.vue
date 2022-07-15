@@ -40,7 +40,7 @@ export default {
   align-items: start;
   justify-content: space-between;
   width: 100%;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 40px auto;
   padding: 35px;
   color: colors.$dark;
   border: 3px solid colors.$secondary;

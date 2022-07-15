@@ -1,6 +1,6 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import AppWrapper from '@/components/simpleComponents/AppWrapper.vue';
+import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
 import AppRange from '@/components/simpleComponents/AppRange.vue';
 import { previewSettings } from '@/data/previewSettings.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
@@ -11,71 +11,84 @@ export default {
   components: {
     AppButton,
     AppRange,
-    AppWrapper,
+    SettingBlockWrapper,
   },
 
   emits: [
-    'pass-settings',
+    'change',
   ],
 
   data() {
     return {
-      settings: {},
-      defaultValues: previewSettings.getDefaultValues(),
+      staticSettings: JSON.parse(JSON.stringify(previewSettings)),
+      reactiveSettings: {},
     }
   },
 
   created() {
-    this.settings = 
-      browserStorage.fetch(this.$options.LOCAL_SETTINGS_ITEM_NAME) 
-      || JSON.parse(JSON.stringify(previewSettings));
+    this.reactiveSettings = browserStorage.fetch(this.$options.LOCAL_SETTINGS_ITEM_NAME) 
+      || this.getInitialValues();
 
-    this.$emit('pass-settings', this.passSettingsObject());
+    this.passSettingsObject();
   },
 
   methods: {
-    passSettingsObject() {
-      const settingsValues = {
-        paddingTop: this.settings.paddings.sides.top.value,
-        paddingLeft: this.settings.paddings.sides.left.value,
-        paddingRight: this.settings.paddings.sides.right.value,
-        paddingBottom: this.settings.paddings.sides.bottom.value,
-        mainTextFontSize: this.settings.textApplicants.mainText.fontSize.value,
-        headingsFontSize: this.settings.textApplicants.headings.fontSize.value,
-        mainTextLineHeight: this.settings.textApplicants.mainText.lineHeight.value,
-        headingsLineHeight: this.settings.textApplicants.headings.lineHeight.value,
-        mainTextFont: this.settings.textApplicants.mainText.font.value,
-        headingsFont: this.settings.textApplicants.headings.font.value,
-        mainTextFontFallback: 
-          this.settings.fonts.options[this.settings.textApplicants.mainText.font.value].fallback,
-        headingsFontFallback: 
-          this.settings.fonts.options[this.settings.textApplicants.headings.font.value].fallback,
-      };
-
-      localStorage.setItem(
-        this.$options.LOCAL_SETTINGS_ITEM_NAME, 
-        JSON.stringify(this.settings),
-      );
-
-      return settingsValues;
+    getInitialValues() {
+      return {
+        paddings: {
+          left: 20,
+          right: 20,
+          bottom: 20,
+          top: 20,
+        },
+        textApplicants: {
+          headings: {
+            font: 'Roboto',
+            fontSize: 16,
+            lineHeight: 1.3,
+          },
+          mainText: {
+            font: 'Alice',
+            fontSize: 16,
+            lineHeight: 1.3,
+          },
+        },
+      }
     },
 
-    resetValue(name, parameter) {
-      parameter.value = this.defaultValues[name];
-      this.$emit('pass-settings', this.passSettingsObject());
+    passSettingsObject() {
+      const settingsValues = {
+        settings: JSON.parse(JSON.stringify(this.reactiveSettings)),
+        mainTextFontFallback: 
+          this.staticSettings.fonts.options[this.reactiveSettings.textApplicants.mainText.font].fallback,
+        headingsFontFallback: 
+          this.staticSettings.fonts.options[this.reactiveSettings.textApplicants.headings.font].fallback,
+      };
+
+      this.saveSettingsToBrowserStorage();
+      this.$emit('change', settingsValues);
+    },
+
+    saveSettingsToBrowserStorage() {
+      browserStorage.saveItem(this.$options.LOCAL_SETTINGS_ITEM_NAME, this.reactiveSettings);
+    },
+
+    resetValue(textApplicant, setting, defaultValue) {
+      this.reactiveSettings.textApplicants[textApplicant][setting] = defaultValue;
+      this.passSettingsObject();
     },
 
     resetPaddings() {
-      this.settings.paddings.sides.left.value = this.defaultValues.padding;
-      this.settings.paddings.sides.right.value = this.defaultValues.padding;
-      this.settings.paddings.sides.bottom.value = this.defaultValues.padding;
-      this.settings.paddings.sides.top.value = this.defaultValues.padding;
-      this.$emit('pass-settings', this.passSettingsObject());
+      this.reactiveSettings.paddings.left = this.staticSettings.paddings.default;
+      this.reactiveSettings.paddings.right = this.staticSettings.paddings.default;
+      this.reactiveSettings.paddings.bottom = this.staticSettings.paddings.default;
+      this.reactiveSettings.paddings.top = this.staticSettings.paddings.default;
+      this.passSettingsObject();
     },
 
     resetAllToDefault() {
-      this.settings = JSON.parse(JSON.stringify(previewSettings));
-      this.$emit('pass-settings', this.passSettingsObject());
+      this.reactiveSettings = this.getInitialValues();
+      this.passSettingsObject();
     },
   },
 }
@@ -85,45 +98,44 @@ export default {
 <div 
   class="preview-settings"
   v-if="true"
-  autofocus
 >   
   <div class="settings-wrapper">
     <div 
-      v-for="textApplicant in settings.textApplicants"
-      :class="textApplicant.class"
+      class="setting-column"
+      v-for="(textApplicant, textAppllicantKey) in staticSettings.textApplicants"
+      :key="textAppllicantKey"
     >   
-      <AppWrapper :name="textApplicant.name">
+      <SettingBlockWrapper :name="textApplicant">
         <AppRange 
-          v-for="(setting, key) in settings.textSettings"
+          v-for="(setting, settingKey) in staticSettings.textSettings"
+          :key="settingKey"
           :min="setting.min"
           :max="setting.max"
           :step="setting.step"
           :range-name="setting.name"
-          :range-value="textApplicant[key].value"
-          @update:rangeValue="value => textApplicant[key].value = value"
-          @input="$emit('pass-settings', passSettingsObject())"
+          v-model="reactiveSettings.textApplicants[textAppllicantKey][settingKey]"
+          @input="passSettingsObject"
         >
           <div class="single-button-wrapper">
             <AppButton 
               link-like
               class="reset-range"
-              @click="resetValue(key, setting)"
+              @click="resetValue(textAppllicantKey, settingKey, setting.value)"
             >
               reset
             </AppButton>
           </div>
         </AppRange>
-        <AppWrapper
-          subname="font:"
-        >
+        <SettingBlockWrapper subname="font:">
           <label class="fonts-dropdown-wrapper">
             <select
               class="fonts-dropdown"
-              v-model="textApplicant.font.value"
-              @change="$emit('pass-settings', passSettingsObject())"
+              v-model="reactiveSettings.textApplicants[textAppllicantKey].font"
+              @change="passSettingsObject"
             >
               <option 
-                v-for="option in settings.fonts.options"
+                v-for="(option, optionKey) in staticSettings.fonts.options"
+                :key="optionKey"
                 :value="option.value"
                 :style="`font-family: ${option.value}, ${option.fallback};`"
               >
@@ -131,24 +143,23 @@ export default {
               </option>
             </select>
           </label>
-        </AppWrapper>
-        
-      </AppWrapper>
+        </SettingBlockWrapper>
+      </SettingBlockWrapper>
     </div>
-    <div class="paddings">
-      <AppWrapper 
-        :name="settings.paddings.name"
-      >
-        <div v-for="side in settings.paddings.sides">
+    <div class="setting-column">
+      <SettingBlockWrapper :name="staticSettings.paddings.name">
+        <div 
+          v-for="(side, sideKey) in staticSettings.paddings.sides"
+          :key="sideKey"
+        >
           <AppRange 
-            :min="settings.paddings.params.min"
-            :max="settings.paddings.params.max"
-            :step="settings.paddings.params.step"
-            :range-name="side.label"
-            :range-value="side.value"
-            @update:rangeValue="value => side.value = value"
-            @input="$emit('pass-settings', passSettingsObject())"
-          ></AppRange>
+            :min="staticSettings.paddings.min"
+            :max="staticSettings.paddings.max"
+            :step="staticSettings.paddings.step"
+            :range-name="side"
+            v-model="reactiveSettings.paddings[sideKey]"
+            @input="passSettingsObject"
+          />
         </div>
         <div class="single-button-wrapper">
           <AppButton 
@@ -159,9 +170,8 @@ export default {
             reset paddings
           </AppButton>
         </div>
-      </AppWrapper>
+      </SettingBlockWrapper>
     </div>
-
   </div>
   <AppButton 
     class="reset"
@@ -187,9 +197,7 @@ export default {
     justify-items: center;
     gap: 40px;
   }
-  .headings,
-  .paddings,
-  .main-text {
+  .setting-column {
     display: flex;
     flex-direction: column;
   }
@@ -218,8 +226,8 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .preview-settings {
-      width: fit-content;
-      margin: 30px auto;
+    width: fit-content;
+    margin: 30px auto;
     .settings-wrapper {
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;

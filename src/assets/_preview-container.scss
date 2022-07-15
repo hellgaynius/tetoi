@@ -66,8 +66,8 @@
     display: block;
     padding: 10px;
     font-family: 'Courier New', Courier, monospace;
-    color: colors.$preview-code;
-    background-color: colors.$preview-code-background;
+    color: colors.$preview-accent-text;
+    background-color: colors.$preview-main;
     letter-spacing: 0.5px;
     border-radius: 5px;
   }

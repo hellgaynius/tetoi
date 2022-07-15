@@ -1,29 +1,16 @@
+$light: #FFFFFF;
+$dark: #000000;
 $main: #F7F7EB;
 $secondary: #C0C2AC;
 $secondary-darker: #3D401C;
-$secondary-light: #FFFFFF;
-$dark: #000000;
-$app-shadow: rgba(0, 0, 0, 0.5);
-$main-active: #cad629;
-$secondary-active: #dde3a4;
+$main-active: #CAD629;
+$secondary-active: #DDE3a4;
 $warning: #E3928D;
 $preview-main: #F2F1F1;
-$secondary-background: #F7F7EB;
 $preview-accent-text: #D8222E;
 
-$logo: $secondary-darker;
-$app-background: $secondary-light;
-$main-background: $main;
-$el-shadow: $secondary;
-$border: $secondary;
-$button-text: $secondary;
-
-$preview-code-background: $preview-main;
-$preview-code: $preview-accent-text;
-$markdown-background: $secondary-background;
-
+$app-background: $light;
 $active-button-background: $main-active;
-$active-button-text: $secondary-light;
 $active-button-hover: $secondary-active;
 $active-button-active: $secondary;
 $info: $secondary-active;

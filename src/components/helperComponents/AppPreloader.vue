@@ -32,7 +32,7 @@ export default {
     filter: blur(1px);
     background: radial-gradient(
       circle at 50%, 
-      colors.$app-shadow, 
+      colors.$dark, 
       colors.$main-active,
       transparent,
     );

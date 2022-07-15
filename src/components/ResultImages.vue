@@ -11,14 +11,14 @@ export default {
     slots: Array,
     images: Object,
     currentSlotIndex: Number,
-    isRerenderRequired: Boolean,
+    isRerenderNeeded: Boolean,
     isProjectFilled: Boolean,
   },
 
   emits: [
     'change-current-slot-index', 
     'remove-slot',
-    'request-create-bulk-images',
+    'set-create-bulk-images-request-status',
   ],
 
   methods: {
@@ -94,16 +94,15 @@ export default {
     </div>
     <div 
       class="optional-notification rerender-offer"
-      v-show="isRerenderRequired && isProjectFilled"
+      v-show="isRerenderNeeded && isProjectFilled"
     >
       <div>
         These miniature images are outdated,
-        however one will be updated once you click on it. <br />
-        Or you may update them all at once.
+        however you may update them all at once.
       </div>
       <AppButton
         button-like
-        @click="$emit('request-create-bulk-images')"
+        @click="$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', true)"
       >
         update all at once!
       </AppButton>
@@ -147,9 +146,9 @@ export default {
     width: 60px;
     aspect-ratio: var(--preview-aspect-ratio);
     cursor: pointer;
-    border: 1px solid colors.$border;
+    border: 1px solid colors.$secondary;
     &.current {
-      box-shadow: 4px 4px 0 colors.$el-shadow;
+      box-shadow: 4px 4px 0 colors.$secondary;
     }
     &.filled {
       border: 1px solid colors.$secondary-darker;

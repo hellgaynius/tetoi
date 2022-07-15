@@ -10,7 +10,7 @@ export default {
   },
 
   props: {
-    isRequestOngoing: Boolean,
+    isServerRequestOngoing: Boolean,
     isProjectPublished: Boolean,
     isProjectSaved: Boolean,
     isProjectFilled: Boolean,
@@ -20,7 +20,7 @@ export default {
 
   emits: [
     'set-project-id',
-    'set-request-status',
+    'set-server-request-status',
     'set-save-status', 
     'set-publish-status',
     'reset-project', 
@@ -29,24 +29,24 @@ export default {
 
   computed: {
     isLocalProjectButtonDisabled() {
-      return this.isProjectPublished || !this.isProjectFilled || this.isRequestOngoing;
+      return this.isProjectPublished || !this.isProjectFilled || this.isServerRequestOngoing;
     },
 
     isSaveButtonDisabled() {
-      return this.isProjectSaved || this.isRequestOngoing;
+      return this.isProjectSaved || this.isServerRequestOngoing;
     },
   },
 
   methods: {
     publishProject() {
-      this.$emit('set-request-status', true);
+      this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
 
       projectApi.publish(this.post)
         .then(response => {
           this.$emit('set-project-id', response.id);
-          this.$emit('set-publish-status', true);
-          this.$emit('set-save-status', true);
-          browserStorage.reset();
+          this.$emit('set-publish-status', 'isProjectPublished', true);
+          this.$emit('set-save-status', 'isProjectSaved', true);
+          browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
               type: 'info',
@@ -62,16 +62,16 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-request-status', false);
+          this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
         });
     },
 
     updateProject() {
-      this.$emit('set-request-status', true);
+      this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
 
       projectApi.update(this.post, this.projectId)
         .then(() => {
-          this.$emit('set-save-status', true);
+          this.$emit('set-save-status', 'isProjectSaved', true);
           this.$emit('show-notification', {
               type: 'info',
               text: `Updates were saved successfully`,
@@ -84,26 +84,26 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-request-status', false);
+          this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
         });
     },
 
     async deleteProject() {
       if (await ask()) {
-        this.$emit('set-request-status', true);
+        this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
 
         projectApi.delete(this.projectId)
           .then(() => {
             window.history.replaceState({}, '', window.location.origin);
-            browserStorage.reset();
+            browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
             this.$emit('reset-project');
             this.$emit('show-notification', {
                 type: 'info',
                 text: `Project ${this.projectId} deleted`,
               });
             this.$emit('set-project-id', null);
-            this.$emit('set-save-status', false);
-            this.$emit('set-publish-status', false);
+            this.$emit('set-save-status', 'isProjectSaved', false);
+            this.$emit('set-publish-status', 'isProjectPublished', false);
           })
           .catch(error => {
             this.$emit('show-notification', {
@@ -112,14 +112,14 @@ export default {
               });
           })
           .finally(() => {
-            this.$emit('set-request-status', false);
+            this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
           });  
       };
     },
 
     async resetProject() {
       if (await ask()) {
-        browserStorage.reset();
+        browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
         this.$emit('reset-project');
       };
     },
@@ -133,7 +133,7 @@ export default {
       <div class="buttons-wrapper">
         <div class="second-grid-column">
           <AppButton
-            class="action-button"
+            class="stretch-button"
             :disabled="isLocalProjectButtonDisabled"
             button-like
             big
@@ -142,25 +142,22 @@ export default {
             publish
           </AppButton>
         </div>
-        <div class="third-grid-column">
-          <div class="single-button-wrapper action-button">
-            <AppButton
-              :disabled="isLocalProjectButtonDisabled"
-              link-like
-              @click="resetProject"
-            >
-              reset project
-            </AppButton>
-          </div>
+        <div class="third-grid-column single-button-wrapper">
+          <AppButton
+            :disabled="isLocalProjectButtonDisabled"
+            link-like
+            @click="resetProject"
+          >
+            reset project
+          </AppButton>
         </div>
-
       </div>
     </div>
     <div v-show="isProjectPublished">
       <div class="buttons-wrapper">
         <div class="second-grid-column">
           <AppButton
-            class="action-button"
+            class="stretch-button"
             :disabled="isSaveButtonDisabled"
             button-like
             big
@@ -169,16 +166,14 @@ export default {
             save
           </AppButton>
         </div>
-        <div class="third-grid-column">
-          <div class="single-button-wrapper action-button">
-            <AppButton
-              :disabled="isRequestOngoing"
-              link-like
-              @click="deleteProject"
-            >
-              delete saved project
-            </AppButton>
-          </div>
+        <div class="third-grid-column single-button-wrapper">
+          <AppButton
+            :disabled="isServerRequestOngoing"
+            link-like
+            @click="deleteProject"
+          >
+            delete saved project
+          </AppButton>
         </div>
       </div>
     </div>
@@ -195,7 +190,7 @@ export default {
   gap: 20px;
   padding-top: 20px;
   align-items: baseline;
-  .action-button {
+  .stretch-button {
     width: 100%;
   }
   .second-grid-column {

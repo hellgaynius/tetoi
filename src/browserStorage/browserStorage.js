@@ -1,15 +1,19 @@
 export const browserStorage = {
-  reset() {
-    localStorage.clear();
+  remove(itemName) {
+    localStorage.removeItem(itemName);
   },
 
-  handle(isProjectFilled, isProjectPublished, itemName, object) {        
+  saveItem(itemName, object) {
+    localStorage.setItem(itemName, JSON.stringify(object))
+  },
+
+  handlePostObject(isProjectFilled, isProjectPublished, itemName, object) {        
     if (!isProjectFilled) {
-      this.reset();
+      this.remove(itemName);
     } else if (isProjectPublished) {
       return false;
     } else {
-      localStorage.setItem(itemName, JSON.stringify(object));
+      this.saveItem(itemName, object);
     }
   },
 

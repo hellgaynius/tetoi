@@ -4,10 +4,11 @@ import TextTransformator from '@/components/TextTransformator.vue';
 import ResultImages from '@/components/ResultImages.vue';
 import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
-import AppPreloader from '@/components/simpleComponents/AppPreloader.vue'
-import AppNotification from '@/components/simpleComponents/AppNotification.vue'
-import AppConfirmation from '@/components/simpleComponents/AppConfirmation.vue'
-import { browserStorage } from '@/browserStorage/browserStorage.js'
+import AppButton from '@/components/simpleComponents/AppButton.vue';
+import AppPreloader from '@/components/helperComponents/AppPreloader.vue';
+import AppNotification from '@/components/helperComponents/AppNotification.vue';
+import AppConfirmation from '@/components/helperComponents/AppConfirmation.vue';
+import { browserStorage } from '@/browserStorage/browserStorage.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
@@ -15,6 +16,7 @@ export default {
   LOCAL_PROJECT_ITEM_NAME: 'localProject',
 
   components: {
+    AppButton,
     AppPreloader,
     AppNotification,
     AppConfirmation,
@@ -27,16 +29,7 @@ export default {
 
   data() {
     return {
-      isRequestOngoing: false,
-      isProjectSaved: false,
-      isProjectPublished: false,
-      isProjectLoaded: false,
       projectId: null,
-      isMarkdownHintHidden: true,
-      areSettingsHidden: true,
-      isRerenderRequired: false,
-      isCreateBulkImagesRequested: false,
-      isRenderOngoing: false,
       notification: {
         show: false,
         type: 'info',
@@ -47,6 +40,18 @@ export default {
       currentSlotIndex: 0,
       previewSettings: {},
       previewSettingsChangeCounter: 0,
+      statuses: {
+        isServerRequestOngoing: false,
+        isProjectSaved: false,
+        isProjectPublished: false,
+        isRerenderNeeded: false,
+        isCreateBulkImagesRequested: false,
+        isRenderOngoing: false,
+      },
+      switchers: {
+        isMarkdownHintHidden: true,
+        areSettingsHidden: true,
+      },
     }
   },
 
@@ -58,36 +63,17 @@ export default {
   },
 
   watch: {
-    previewSettings: {
-      handler() {
-        if (this.isProjectFilled) {
-          this.previewSettingsChangeCounter++;
-        } else {
-          this.previewSettingsChangeCounter = 0;
-        } 
-      },
-
-      deep: true,
-    },
-
-    previewSettingsChangeCounter(value) {
-      if (value) {
-        this.isRerenderRequired = true;
-      } 
-    },
-
     post: {
       handler() {
-        browserStorage.handle(
+        browserStorage.handlePostObject(
           this.isProjectFilled, 
-          this.isProjectPublished, 
+          this.statuses.isProjectPublished, 
           this.$options.LOCAL_PROJECT_ITEM_NAME, 
           this.post,
         );
 
         if (!this.isProjectFilled) {
-          this.previewSettingsChangeCounter = 0;
-          this.isRerenderRequired = false;
+          this.statuses.isRerenderNeeded = false;
         }
       },
 
@@ -142,16 +128,16 @@ export default {
         this.post = project;
       };
 
-      this.isProjectLoaded = true;
+      this.statuses.isCreateBulkImagesRequested = true;
     },
 
     fetchProject(projectId) {
-      this.isRequestOngoing = true;
+      this.statuses.isServerRequestOngoing = true;
 
       return projectApi.get(projectId)
         .then(serverResponse => {
-          this.isProjectPublished = true;
-          this.isProjectSaved = true;
+          this.statuses.isProjectPublished = true;
+          this.statuses.isProjectSaved = true;
           this.showNotification({
             type: 'info',
             text: 'Successfuly loaded project from server',
@@ -169,7 +155,7 @@ export default {
           return null;
         })
         .finally(() => {
-          this.isRequestOngoing = false;
+          this.statuses.isServerRequestOngoing = false;
         });
     },
 
@@ -192,17 +178,21 @@ export default {
         this.post.fullText = textValue;
       }
 
-      if (this.isProjectPublished) {
-        this.isProjectSaved = false;
+      if (this.statuses.isProjectPublished) {
+        this.statuses.isProjectSaved = false;
       }
     },
 
+    toggleSwitcher(switcher) {
+      this.switchers[switcher] = !this.switchers[switcher];
+    },
+
     toggleSettings() {
-      this.areSettingsHidden = !this.areSettingsHidden;
+      this.switchers.areSettingsHidden = !this.switchers.areSettingsHidden;
     },
 
     toggleMarkdownHint() {
-      this.isMarkdownHintHidden = !this.isMarkdownHintHidden;
+      this.switchers.isMarkdownHintHidden = !this.switchers.isMarkdownHintHidden;
     },
 
     changeCurrentSlotIndex(index) {
@@ -229,24 +219,22 @@ export default {
       this.projectId = '/' + id;
     },
 
-    setRequestStatus(status) {
-      this.isRequestOngoing = status;
-    },
+    setStatus(entity, status) {
+      this.statuses[entity] = status;
+    }, 
 
-    setSaveStatus(status) {
-      this.isProjectSaved = status;
-    },
+    setSettings(settings) {
+      this.previewSettings = settings;
 
-    setPublishStatus(status) {
-      this.isProjectPublished = status;
-    },
+      if (this.isProjectFilled) {
+        this.previewSettingsChangeCounter++;
+      } else {
+        this.previewSettingsChangeCounter = 0;
+      };
 
-    setRenderingStatus(status) {
-      this.isRenderOngoing = status;
-    },
-
-    setRenderingNeed(isNeeded) {
-      this.isRerenderRequired = isNeeded;
+      if (this.previewSettingsChangeCounter) {
+        this.statuses.isRerenderNeeded = true;
+      };
     },
 
     resetProject() {
@@ -258,20 +246,12 @@ export default {
         text: 'Your project was reset',
       });
     },
-
-    acceptSettings(settings) {
-      this.previewSettings = settings;
-    },
-
-    requestCreateBulkImages() {
-      this.isCreateBulkImagesRequested = true;
-    },
   },
 };
 </script>
 
 <template>
-  <AppPreloader :is-active="isRequestOngoing || isRenderOngoing" />
+  <AppPreloader :is-active="statuses.isServerRequestOngoing || statuses.isRenderOngoing" />
   <AppNotification
     :notification="notification"
     @close-notification="closeNotification"
@@ -284,66 +264,86 @@ export default {
     <main class="main">
       <div 
         class="app-preloader-mask"
-        v-show="isRenderOngoing"
+        v-show="statuses.isRenderOngoing"
       >
-      </div>
-      <div
-        v-show="isProjectPublished"
-        class="project-status"
-      >
-        <span 
-          v-if="isProjectSaved"
-          class="status-text saved"
-        >saved</span>
-        <span 
-          v-else
-          class="status-text unsaved"
-        >unsaved</span>
       </div>
       <PreviewSettings
-        v-show="!areSettingsHidden"
-        @pass-settings="acceptSettings"
+        v-show="!switchers.areSettingsHidden"
+        @change="setSettings"
       />
+      <div class="single-button-wrapper">
+        <AppButton 
+          link-like
+          settings
+          @click="toggleSettings"
+        >
+          <span v-if="switchers.areSettingsHidden">show </span>
+          <span v-else>hide </span>
+          text settings
+        </AppButton>
+      </div>
       <TextTransformator
-        :is-disabled="isRequestOngoing"
-        :is-project-loaded="isProjectLoaded"
+        :is-disabled="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
-        :is-markdown-hint-hidden="isMarkdownHintHidden"
         :current-slot-index="currentSlotIndex"
         :post="post"
         :preview-settings="previewSettings"
-        :are-settings-hidden="areSettingsHidden"
-        :is-create-bulk-images-requested="isCreateBulkImagesRequested"
-        :is-render-ongoing="isRenderOngoing"
-        @toggle-settings="toggleSettings"
-        @toggle-markdown-hint="toggleMarkdownHint"
+        :is-create-bulk-images-requested="statuses.isCreateBulkImagesRequested"
+        :is-render-ongoing="statuses.isRenderOngoing"
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
-        @set-rendering-status="setRenderingStatus"
-        @set-rendering-need="setRenderingNeed"
+        @set-rendering-status="setStatus"
+        @set-rerendering-need="setStatus"
+        @set-create-bulk-images-request-status="setStatus"
       />
-      <MarkdownHint v-show="!isMarkdownHintHidden"/>
+      <div class="items-grid-wrapper">
+        <div class="single-button-wrapper markdown">
+          <AppButton 
+            link-like
+            markdown
+            @click="toggleMarkdownHint"
+          >
+            <span v-if="switchers.isMarkdownHintHidden">show </span>
+            <span v-else>hide </span>
+            markdown hint
+          </AppButton>
+        </div>
+        <div
+          v-show="statuses.isProjectPublished"
+          class="project-status"
+        >
+          <span 
+            v-if="statuses.isProjectSaved"
+            class="status-text saved"
+          >saved</span>
+          <span 
+            v-else
+            class="status-text unsaved"
+          >unsaved</span>
+        </div>
+      </div>
+      <MarkdownHint v-show="!switchers.isMarkdownHintHidden"/>
       <ResultImages
         :current-slot-index="currentSlotIndex"
         :images="images"
         :slots="post.slots"
-        :is-rerender-required="isRerenderRequired"
+        :is-rerender-needed="statuses.isRerenderNeeded"
         :is-project-filled="isProjectFilled"
-        @request-create-bulk-images="requestCreateBulkImages"
+        @set-create-bulk-images-request-status="setStatus"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
       <ProjectActions
         :post="post"
         :projectId="projectId"
-        :is-request-ongoing="isRequestOngoing"
+        :is-request-ongoing="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
-        :is-project-published="isProjectPublished"
-        :is-project-saved="isProjectSaved"
+        :is-project-published="statuses.isProjectPublished"
+        :is-project-saved="statuses.isProjectSaved"
         @set-project-id="setProjectId"
-        @set-request-status="setRequestStatus"
-        @set-save-status="setSaveStatus"
-        @set-publish-status="setPublishStatus"
+        @set-server-request-status="setStatus"
+        @set-save-status="setStatus"
+        @set-publish-status="setStatus"
         @reset-project="resetProject"
         @show-notification="showNotification"
       />
@@ -395,8 +395,21 @@ export default {
     background-color: colors.$app-background;
     opacity: 0.5;
   }
+  .items-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 10px;
+  }
+  .single-button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    &.markdown {
+      justify-content: flex-start;
+    }
+  }
   .project-status {
-    text-align: right;
+    text-align: center;
+    padding-bottom: 20px;
   }
   .status-text {
     letter-spacing: 4px;

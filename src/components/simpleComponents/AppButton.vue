@@ -79,8 +79,8 @@ export default {
       border: none;
       cursor: default;
     }
-    &.settings {
-      margin-bottom: 10px;
+    &.markdown {
+      margin-bottom: 20px;
     }
   }
   &.big {

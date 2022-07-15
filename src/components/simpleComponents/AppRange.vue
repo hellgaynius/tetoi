@@ -11,8 +11,8 @@ export default {
     min: Number,
     max: Number,
     step: Number,
-    rangeValue: Number,
     rangeName: String,
+    modelValue: Number,
   },
 
   emits: [
@@ -33,7 +33,7 @@ export default {
         {{ rangeName }}
       </span>
       <span class="range-value">
-        {{ rangeValue }}
+        {{ modelValue }}
       </span>
     </div>
     <div class="range-controls">
@@ -43,8 +43,8 @@ export default {
         :min="min"
         :max="max"
         :step="step"
-        :value="rangeValue"
-        @input="$emit('update:rangeValue', +$event.target.value)"
+        :value="modelValue"
+        @input="$emit('update:modelValue', +$event.target.value)"
       />
       <slot />
     </div>

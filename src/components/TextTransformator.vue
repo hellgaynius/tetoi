@@ -18,10 +18,7 @@ export default {
 
   props: {
     isDisabled: Boolean,
-    isProjectLoaded: Boolean,
     isProjectFilled: Boolean,
-    isMarkdownHintHidden: Boolean,
-    areSettingsHidden: Boolean,
     isCreateBulkImagesRequested: Boolean,
     isRenderOngoing: Boolean,
     currentSlotIndex: Number,
@@ -30,12 +27,12 @@ export default {
   },
 
   emits: [
-    'toggle-markdown-hint', 
-    'toggle-settings',
+    'toggle-switcher',
     'save-text', 
     'change-slot-image',
     'set-rendering-status',
-    'set-rendering-need',
+    'set-rerendering-need',
+    'set-create-bulk-images-request-status',
   ],
 
   data() {
@@ -56,6 +53,34 @@ export default {
     currentTextValue() {
       return this.post.slots[this.currentSlotIndex]?.text;
     },
+
+    previewPaddingSettings() {
+      if (this.previewSettings.settings) {
+        return `
+          padding-left: ${this.previewSettings.settings.paddings.left}px;
+          padding-right: ${this.previewSettings.settings.paddings.right}px;
+          padding-bottom: ${this.previewSettings.settings.paddings.bottom}px;
+          padding-top: ${this.previewSettings.settings.paddings.top}px;
+        `
+      };
+    },
+
+    previewTextSettings() {
+      if (this.previewSettings.settings) {
+        return `
+          --main-text-font-size: ${this.previewSettings.settings.textApplicants.mainText.fontSize}px;
+          --headings-font-size: ${this.previewSettings.settings.textApplicants.headings.fontSize}px;
+          --main-text-line-height: ${this.previewSettings.settings.textApplicants.mainText.lineHeight};
+          --headings-line-height: ${this.previewSettings.settings.textApplicants.headings.lineHeight};
+          --main-text-font-family: 
+            ${this.previewSettings.settings.textApplicants.mainText.font}, 
+            ${this.previewSettings.mainTextFontFallback};
+          --headings-font-family: 
+            ${this.previewSettings.settings.textApplicants.headings.font}, 
+            ${this.previewSettings.headingsFontFallback};
+        `
+      };
+    }
   },
 
   watch: {
@@ -71,12 +96,6 @@ export default {
       };
     },
 
-    isProjectLoaded(newValue) {
-      if (newValue) {
-        this.createBulkImages();
-      };
-    },
-
     previewSettings: {
       handler() {
         this.$nextTick()
@@ -88,29 +107,24 @@ export default {
       deep: true,
     },
 
-    isCreateBulkImagesRequested() {
-
-      this.createBulkImages();
+    isCreateBulkImagesRequested(value) {
+      if (value) {
+        this.createBulkImages();
+        this.$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', false);
+      };
     },
   },
 
   mounted() {
     imageCreation.init(this.$refs.previewForConverting);
-    
-    if (this.isProjectLoaded) {
+
+    if (this.isCreateBulkImagesRequested) {
       this.createBulkImages();
+      this.$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', false);
     };
   },
 
   methods: {
-    toggleSettings() {
-      this.$emit('toggle-settings');
-    },
-
-    toggleMarkdownHint() {
-      this.$emit('toggle-markdown-hint');
-    },
-
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
     },
@@ -120,7 +134,7 @@ export default {
     },
 
     async createBulkImages() {
-      this.$emit('set-rendering-status', true);
+      this.$emit('set-rendering-status', 'isRenderOngoing', true);
 
       for (let i = 0; i < this.post.slots.length; i++) {
         if (this.post.slots[i].text) {
@@ -129,8 +143,8 @@ export default {
       };
 
       this.renderPreview(this.currentSlotIndex);
-      this.$emit('set-rendering-status', false);
-      this.$emit('set-rendering-need', false);
+      this.$emit('set-rendering-status', 'isRenderOngoing', false);
+      this.$emit('set-rerendering-need', 'isRerenderNeeded', false);
     },
 
     createBulkImagesDebounced: debounce(RENDER_BULK_IMAGES_DELAY, function() {
@@ -158,6 +172,10 @@ export default {
     },
 
     buildDependentEntitiesForSlot(slotIndex) {
+      if (this.post.slots.length == 1) {
+        this.$emit('set-rerendering-need', 'isRerenderNeeded', false);
+      };
+
       this.renderPreview(slotIndex);
       return this.saveImageToSlot(slotIndex);
     },
@@ -212,30 +230,8 @@ export default {
           ></textarea>
         </label>
       </div>
-      <div class="buttons">
-        <AppButton 
-          link-like
-          markdown
-          @click="toggleMarkdownHint"
-        >
-          <span v-if="isMarkdownHintHidden">show </span>
-          <span v-else>hide </span>
-          markdown instructions
-        </AppButton>
-      </div>
     </div>
     <div class="preview-block">
-      <div class="single-button-wrapper">
-        <AppButton 
-          link-like
-          settings
-          @click="toggleSettings"
-        >
-          <span v-if="areSettingsHidden">show </span>
-          <span v-else>hide </span>
-          text settings
-        </AppButton>
-      </div>
       <div class="preview-label">
         Preview:
       </div>
@@ -260,24 +256,12 @@ export default {
         <div 
           class="preview-wrapper padding"
           ref="previewForConverting"
-          :style="`
-            padding-left: ${previewSettings.paddingLeft}px;
-            padding-right: ${previewSettings.paddingRight}px;
-            padding-bottom: ${previewSettings.paddingBottom}px;
-            padding-top: ${previewSettings.paddingTop}px;
-          `"
+          :style="previewPaddingSettings"
         >
           <div 
             ref="previewContainer"
             class="preview-container"
-            :style="`
-              --main-text-font-size: ${previewSettings.mainTextFontSize}px;
-              --headings-font-size: ${previewSettings.headingsFontSize}px;
-              --main-text-line-height: ${previewSettings.mainTextLineHeight};
-              --headings-line-height: ${previewSettings.headingsLineHeight};
-              --main-text-font-family: ${previewSettings.mainTextFont}, ${previewSettings.mainTextFontFallback};
-              --headings-font-family: ${previewSettings.headingsFont}, ${previewSettings.headingsFontFallback};
-            `"
+            :style="previewTextSettings"
           >
             <div
               v-html="renderedPreview"
@@ -328,7 +312,6 @@ export default {
     + var(--font-size)
   );
   width: 100%;
-  padding-bottom: 30px;
   .inner {
     flex-grow: 1;
     min-width: 200px;
@@ -339,10 +322,7 @@ export default {
     height: calc(
       (var(--preview-width) / var(--preview-aspect-ratio)) 
       + var(--preview-padding) 
-      + var(--preview-width-border)
-      + var(--label-padding-bottom)
-      + var(--font-size)
-      * var(--line-height)
+      + var(--preview-width-border) * 2
     ); 
   }
   .field-container {
@@ -370,10 +350,10 @@ export default {
     resize: none;
     border-radius: unset;
     transition: box-shadow 0.2s;
-    border: 1px solid colors.$border;
+    border: 1px solid colors.$secondary;
     font-family: 'Finlandica', Verdana, sans-serif;
     &:focus-visible {
-      box-shadow: 4px 4px 0 colors.$el-shadow;
+      box-shadow: 4px 4px 0 colors.$secondary;
     }
   }
   .preview-block {
@@ -381,10 +361,6 @@ export default {
     flex-direction: column;
     padding-top: var(--preview-padding);
     position: relative;
-  }
-  .single-button-wrapper {
-    display: flex;
-    justify-content: flex-end;
   }
   .preview-label {
     display: none;
@@ -398,7 +374,7 @@ export default {
     &.border {
       position: relative;
       margin-bottom: 10px;
-      border: 1px solid colors.$border;
+      border: 1px solid colors.$secondary;
       &.text-overflow {
         border-color: colors.$warning;
       }
@@ -408,7 +384,7 @@ export default {
       aspect-ratio: var(--preview-aspect-ratio);
       padding: var(--preview-wrapper-padding);
       overflow: hidden;
-      background-color: colors.$secondary-light;
+      background-color: colors.$light;
     }
   } 
   .preloader-mask {
