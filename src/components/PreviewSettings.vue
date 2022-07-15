@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
-import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
 import AppRange from '@/components/simpleComponents/AppRange.vue';
+import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
 import { previewSettings } from '@/data/previewSettings.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 
@@ -102,25 +102,27 @@ export default {
   <div class="settings-wrapper">
     <div 
       class="setting-column"
-      v-for="(textApplicant, textAppllicantKey) in staticSettings.textApplicants"
-      :key="textAppllicantKey"
+      v-for="(textApplicant, textApplicantKey) in staticSettings.textApplicants"
+      :key="textApplicantKey"
     >   
-      <SettingBlockWrapper :name="textApplicant">
+      <SettingBlockWrapper :name="textApplicant.name">
         <AppRange 
-          v-for="(setting, settingKey) in staticSettings.textSettings"
+          v-for="(setting, settingKey) in textApplicant.settings"
           :key="settingKey"
           :min="setting.min"
           :max="setting.max"
           :step="setting.step"
           :range-name="setting.name"
-          v-model="reactiveSettings.textApplicants[textAppllicantKey][settingKey]"
-          @input="passSettingsObject"
+          v-model="reactiveSettings.textApplicants[textApplicantKey][settingKey]"
+          @input="passSettingsObject()"
         >
           <div class="single-button-wrapper">
-            <AppButton 
+            <AppButton
+              v-show="reactiveSettings.textApplicants[textApplicantKey][settingKey] 
+                !== setting.value"
               link-like
               class="reset-range"
-              @click="resetValue(textAppllicantKey, settingKey, setting.value)"
+              @click="resetValue(textApplicantKey, settingKey, setting.value)"
             >
               reset
             </AppButton>
@@ -130,7 +132,7 @@ export default {
           <label class="fonts-dropdown-wrapper">
             <select
               class="fonts-dropdown"
-              v-model="reactiveSettings.textApplicants[textAppllicantKey].font"
+              v-model="reactiveSettings.textApplicants[textApplicantKey].font"
               @change="passSettingsObject"
             >
               <option 
@@ -205,6 +207,7 @@ export default {
     display: flex;
     justify-content: flex-end;
     padding-top: 10px;
+    height: 25px;
   }
   .fonts-dropdown-wrapper {
     border-bottom: 2px solid colors.$secondary;
@@ -226,12 +229,12 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .preview-settings {
-    width: fit-content;
-    margin: 30px auto;
+    width: var(--preview-width);
+    margin: 10px auto;
     .settings-wrapper {
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      padding: 30px 15px 0;
+      padding: 10px 15px 0;
     }
     .reset {
       margin-right: 0;

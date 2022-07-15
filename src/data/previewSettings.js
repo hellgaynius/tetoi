@@ -14,8 +14,44 @@ export const previewSettings = {
   },
 
   textApplicants: {
-    headings: 'Headings',
-    mainText: 'Main text'
+    headings: {
+      name: 'Headings',
+      settings: {
+        fontSize: {
+          name: 'size:',
+          value: 16,
+          step: 1,
+          min: 8,
+          max: 30,
+        },
+        lineHeight: {
+          name: 'line height:',
+          value: 1.1,
+          min: 0.5,
+          max: 2.5,
+          step: 0.05,
+        },
+      },
+    },
+    mainText: {
+      name: 'Main text',
+      settings: {
+        fontSize: {
+          name: 'size:',
+          value: 16,
+          step: 1,
+          min: 8,
+          max: 30,
+        },
+        lineHeight: {
+          name: 'line height:',
+          value: 1.1,
+          min: 0.5,
+          max: 2.5,
+          step: 0.05,
+        },
+      },
+    },
   },
 
   fonts: {
@@ -54,31 +90,5 @@ export const previewSettings = {
         value: 'Roboto',
       },
     },
-  },
-
-  textSettings: {
-    fontSize: {
-      name: 'size:',
-      min: 10,
-      max: 24,
-      step: 2,
-    },
-
-    lineHeight: {
-      name: 'line height:',
-      min: 0.5,
-      max: 2.5,
-      step: 0.1,
-    },
-  },
-
-  getDefaultValues() {
-    return {
-      mainTextFontSize: this.textSettings.fontSize.value,
-      headingsFontSize: this.textSettings.fontSize.value,
-      mainTextLineHeight: this.textSettings.lineHeight.value,
-      headingsLineHeight: this.textSettings.lineHeight.value,
-      padding: this.paddings.default,
-    }
   },
 }

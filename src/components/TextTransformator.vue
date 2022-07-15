@@ -99,8 +99,10 @@ export default {
     previewSettings: {
       handler() {
         this.$nextTick()
-          .then(
-            () => this.checkTextOverflow()
+          .then(() => {
+              this.checkTextOverflow();
+              this.buildDependentEntitiesForSlot(this.currentSlotIndex);
+            }
           );
       },
 
@@ -456,7 +458,7 @@ export default {
 @media #{breakpoints.$s-media} {
   .text-transformator {
     flex-wrap: wrap;
-    padding-bottom: 0;
+    padding-bottom: 20px;
     .inner {
       min-width: var(--preview-width);
     }

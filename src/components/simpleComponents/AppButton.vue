@@ -92,7 +92,7 @@ export default {
 
 @media #{breakpoints.$s-media} {
   .markdown {
-    margin: 0 auto;
+    padding: 0 5px;
   }
 }
 </style>

@@ -97,7 +97,7 @@ export default {
       v-show="isRerenderNeeded && isProjectFilled"
     >
       <div>
-        These miniature images are outdated,
+        As the settings were changed, these miniature images are outdated,
         however you may update them all at once.
       </div>
       <AppButton

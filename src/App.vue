@@ -272,7 +272,7 @@ export default {
         v-show="!switchers.areSettingsHidden"
         @change="setSettings"
       />
-      <div class="single-button-wrapper">
+      <div class="toggle-button-wrapper">
         <AppButton 
           link-like
           settings
@@ -298,7 +298,7 @@ export default {
         @set-create-bulk-images-request-status="setStatus"
       />
       <div class="items-grid-wrapper">
-        <div class="single-button-wrapper markdown">
+        <div class="toggle-button-wrapper markdown">
           <AppButton 
             link-like
             markdown
@@ -364,6 +364,7 @@ export default {
   flex-direction: column;
   .logo {
     position: absolute;
+    top: 30px;
     left: 100px;
     font: bold 76px 'Chakra Petch', sans-serif;
     background-image: linear-gradient(colors.$main-active, colors.$secondary);
@@ -401,7 +402,7 @@ export default {
     grid-template-columns: repeat(3, 1fr);
     margin-bottom: 10px;
   }
-  .single-button-wrapper {
+  .toggle-button-wrapper {
     display: flex;
     justify-content: flex-end;
     &.markdown {
@@ -446,6 +447,13 @@ export default {
     }
     .project-status {
       padding: 20px;
+    }
+    .items-grid-wrapper {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .toggle-button-wrapper {
+      width: var(--preview-width);
     }
   }
 }

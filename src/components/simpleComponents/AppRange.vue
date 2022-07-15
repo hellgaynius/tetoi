@@ -16,7 +16,7 @@ export default {
   },
 
   emits: [
-    'update:rangeValue',
+    'update:modelValue',
     'reset-value',
   ],
 }
