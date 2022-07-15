@@ -351,7 +351,7 @@ export default {
     border-radius: unset;
     transition: box-shadow 0.2s;
     border: 1px solid colors.$secondary;
-    font-family: 'Finlandica', Verdana, sans-serif;
+    font-family: 'Roboto', Verdana, sans-serif;
     &:focus-visible {
       box-shadow: 4px 4px 0 colors.$secondary;
     }

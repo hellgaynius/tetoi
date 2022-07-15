@@ -59,7 +59,6 @@ export const previewSettings = {
   textSettings: {
     fontSize: {
       name: 'size:',
-      value: 16,
       min: 10,
       max: 24,
       step: 2,
@@ -67,7 +66,6 @@ export const previewSettings = {
 
     lineHeight: {
       name: 'line height:',
-      value: 1.3,
       min: 0.5,
       max: 2.5,
       step: 0.1,

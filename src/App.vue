@@ -203,15 +203,16 @@ export default {
       this.images[slotId] = imgSrc;
     },
 
-    removeSlot(id) {
+    async removeSlot(id) {
       const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
 
       if (this.currentSlotIndex === deletedSlotIndex) {
         this.currentSlotIndex = 0;
       } else if (this.currentSlotIndex > deletedSlotIndex) {
         this.currentSlotIndex--;
-      };
+      }
 
+      await this.$nextTick();
       this.post.slots.splice(deletedSlotIndex, 1);
     },
 
@@ -232,7 +233,7 @@ export default {
         this.previewSettingsChangeCounter = 0;
       };
 
-      if (this.previewSettingsChangeCounter) {
+      if (this.previewSettingsChangeCounter > 1) {
         this.statuses.isRerenderNeeded = true;
       };
     },

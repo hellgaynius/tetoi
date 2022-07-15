@@ -45,12 +45,12 @@ export default {
           headings: {
             font: 'Roboto',
             fontSize: 16,
-            lineHeight: 1.3,
+            lineHeight: 1.1,
           },
           mainText: {
-            font: 'Alice',
+            font: 'Roboto',
             fontSize: 16,
-            lineHeight: 1.3,
+            lineHeight: 1.2,
           },
         },
       }
