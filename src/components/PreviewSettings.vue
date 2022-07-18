@@ -2,12 +2,10 @@
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import AppRange from '@/components/simpleComponents/AppRange.vue';
 import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
-import { previewSettings } from '@/data/previewSettings.js';
+import { previewSettings, getDefaultSettings } from '@/data/previewSettings.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 
 export default {
-  LOCAL_SETTINGS_ITEM_NAME: 'localSettings',
-
   components: {
     AppButton,
     AppRange,
@@ -20,74 +18,47 @@ export default {
 
   data() {
     return {
-      staticSettings: JSON.parse(JSON.stringify(previewSettings)),
-      reactiveSettings: {},
+      settingsOptions: JSON.parse(JSON.stringify(previewSettings)),
+      settingsToPass: {},
     }
   },
 
   created() {
-    this.reactiveSettings = browserStorage.fetch(this.$options.LOCAL_SETTINGS_ITEM_NAME) 
-      || this.getInitialValues();
+    this.settingsToPass = browserStorage.fetch('settings') 
+      || getDefaultSettings();
 
     this.passSettingsObject();
   },
 
   methods: {
-    getInitialValues() {
-      return {
-        paddings: {
-          left: 20,
-          right: 20,
-          bottom: 20,
-          top: 20,
-        },
-        textApplicants: {
-          headings: {
-            font: 'Roboto',
-            fontSize: 16,
-            lineHeight: 1.1,
-          },
-          mainText: {
-            font: 'Roboto',
-            fontSize: 16,
-            lineHeight: 1.2,
-          },
-        },
-      }
-    },
-
     passSettingsObject() {
       const settingsValues = {
-        settings: JSON.parse(JSON.stringify(this.reactiveSettings)),
+        settings: JSON.parse(JSON.stringify(this.settingsToPass)),
         mainTextFontFallback: 
-          this.staticSettings.fonts.options[this.reactiveSettings.textApplicants.mainText.font].fallback,
+          this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.mainText.font].fallback,
         headingsFontFallback: 
-          this.staticSettings.fonts.options[this.reactiveSettings.textApplicants.headings.font].fallback,
+          this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.headings.font].fallback,
       };
 
-      this.saveSettingsToBrowserStorage();
+      browserStorage.saveItem('settings', this.settingsToPass);
       this.$emit('change', settingsValues);
     },
 
-    saveSettingsToBrowserStorage() {
-      browserStorage.saveItem(this.$options.LOCAL_SETTINGS_ITEM_NAME, this.reactiveSettings);
-    },
-
     resetValue(textApplicant, setting, defaultValue) {
-      this.reactiveSettings.textApplicants[textApplicant][setting] = defaultValue;
+      this.settingsToPass.textApplicants[textApplicant][setting] = defaultValue;
       this.passSettingsObject();
     },
 
     resetPaddings() {
-      this.reactiveSettings.paddings.left = this.staticSettings.paddings.default;
-      this.reactiveSettings.paddings.right = this.staticSettings.paddings.default;
-      this.reactiveSettings.paddings.bottom = this.staticSettings.paddings.default;
-      this.reactiveSettings.paddings.top = this.staticSettings.paddings.default;
+      this.settingsToPass.paddings.left = this.settingsOptions.paddings.default;
+      this.settingsToPass.paddings.right = this.settingsOptions.paddings.default;
+      this.settingsToPass.paddings.bottom = this.settingsOptions.paddings.default;
+      this.settingsToPass.paddings.top = this.settingsOptions.paddings.default;
       this.passSettingsObject();
     },
 
     resetAllToDefault() {
-      this.reactiveSettings = this.getInitialValues();
+      this.settingsToPass = getDefaultSettings();
       this.passSettingsObject();
     },
   },
@@ -95,14 +66,11 @@ export default {
 </script>
 
 <template>
-<div 
-  class="preview-settings"
-  v-if="true"
->   
+<div class="preview-settings">   
   <div class="settings-wrapper">
     <div 
       class="setting-column"
-      v-for="(textApplicant, textApplicantKey) in staticSettings.textApplicants"
+      v-for="(textApplicant, textApplicantKey) in settingsOptions.textApplicants"
       :key="textApplicantKey"
     >   
       <SettingBlockWrapper :name="textApplicant.name">
@@ -113,12 +81,12 @@ export default {
           :max="setting.max"
           :step="setting.step"
           :range-name="setting.name"
-          v-model="reactiveSettings.textApplicants[textApplicantKey][settingKey]"
+          v-model="settingsToPass.textApplicants[textApplicantKey][settingKey]"
           @input="passSettingsObject()"
         >
           <div class="single-button-wrapper">
             <AppButton
-              v-show="reactiveSettings.textApplicants[textApplicantKey][settingKey] 
+              v-show="settingsToPass.textApplicants[textApplicantKey][settingKey] 
                 !== setting.value"
               link-like
               class="reset-range"
@@ -132,11 +100,11 @@ export default {
           <label class="fonts-dropdown-wrapper">
             <select
               class="fonts-dropdown"
-              v-model="reactiveSettings.textApplicants[textApplicantKey].font"
+              v-model="settingsToPass.textApplicants[textApplicantKey].font"
               @change="passSettingsObject"
             >
               <option 
-                v-for="(option, optionKey) in staticSettings.fonts.options"
+                v-for="(option, optionKey) in settingsOptions.fonts.options"
                 :key="optionKey"
                 :value="option.value"
                 :style="`font-family: ${option.value}, ${option.fallback};`"
@@ -149,17 +117,17 @@ export default {
       </SettingBlockWrapper>
     </div>
     <div class="setting-column">
-      <SettingBlockWrapper :name="staticSettings.paddings.name">
+      <SettingBlockWrapper :name="settingsOptions.paddings.name">
         <div 
-          v-for="(side, sideKey) in staticSettings.paddings.sides"
+          v-for="(side, sideKey) in settingsOptions.paddings.sides"
           :key="sideKey"
         >
           <AppRange 
-            :min="staticSettings.paddings.min"
-            :max="staticSettings.paddings.max"
-            :step="staticSettings.paddings.step"
+            :min="settingsOptions.paddings.min"
+            :max="settingsOptions.paddings.max"
+            :step="settingsOptions.paddings.step"
             :range-name="side"
-            v-model="reactiveSettings.paddings[sideKey]"
+            v-model="settingsToPass.paddings[sideKey]"
             @input="passSettingsObject"
           />
         </div>

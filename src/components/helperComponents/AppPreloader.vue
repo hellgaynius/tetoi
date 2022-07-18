@@ -19,6 +19,7 @@ export default {
 
 <style lang="scss">
 @use '@/assets/colors';
+@import '@/assets/mixins';
 
 .preloader-bar {
   position: fixed;
@@ -37,10 +38,7 @@ export default {
       transparent,
     );
     animation-name: preloader;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: cubic-bezier(.75, -0.01, .59, .99);
+    @include preloader-animation;
   }
   @keyframes preloader {
     0% {

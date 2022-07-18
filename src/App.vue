@@ -13,7 +13,7 @@ import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
 export default {
-  LOCAL_PROJECT_ITEM_NAME: 'localProject',
+  SLOTS_MAX_QUANTITY: 10,
 
   components: {
     AppButton,
@@ -39,7 +39,6 @@ export default {
       images: {},
       currentSlotIndex: 0,
       previewSettings: {},
-      previewSettingsChangeCounter: 0,
       statuses: {
         isServerRequestOngoing: false,
         isProjectSaved: false,
@@ -47,6 +46,7 @@ export default {
         isRerenderNeeded: false,
         isCreateBulkImagesRequested: false,
         isRenderOngoing: false,
+        areInitialPreviewSettingsPassed: false,
       },
       switchers: {
         isMarkdownHintHidden: true,
@@ -68,7 +68,7 @@ export default {
         browserStorage.handlePostObject(
           this.isProjectFilled, 
           this.statuses.isProjectPublished, 
-          this.$options.LOCAL_PROJECT_ITEM_NAME, 
+          'project',
           this.post,
         );
 
@@ -107,11 +107,11 @@ export default {
 
       if (this.projectId.length > 1) {
         serverProject = await this.fetchProject(this.projectId);
-      } 
+      };
 
       if (!serverProject) {
         this.projectId = null;
-        localProject = browserStorage.fetch(this.$options.LOCAL_PROJECT_ITEM_NAME);
+        localProject = browserStorage.fetch('project');
       };
 
       if (localProject) {
@@ -176,11 +176,11 @@ export default {
         this.post.slots[this.currentSlotIndex].text = textValue;
       } else {
         this.post.fullText = textValue;
-      }
+      };
 
       if (this.statuses.isProjectPublished) {
         this.statuses.isProjectSaved = false;
-      }
+      };
     },
 
     toggleSwitcher(switcher) {
@@ -210,8 +210,8 @@ export default {
         this.currentSlotIndex = 0;
       } else if (this.currentSlotIndex > deletedSlotIndex) {
         this.currentSlotIndex--;
-      }
-
+      };
+      // nextTick here is due to confusing order of Vue handling interaction between components
       await this.$nextTick();
       this.post.slots.splice(deletedSlotIndex, 1);
     },
@@ -228,12 +228,10 @@ export default {
       this.previewSettings = settings;
 
       if (this.isProjectFilled) {
-        this.previewSettingsChangeCounter++;
-      } else {
-        this.previewSettingsChangeCounter = 0;
+        this.areInitialPreviewSettingsPassed = true;
       };
 
-      if (this.previewSettingsChangeCounter > 1) {
+      if (this.areInitialPreviewSettingsPassed) {
         this.statuses.isRerenderNeeded = true;
       };
     },
@@ -278,9 +276,7 @@ export default {
           settings
           @click="toggleSettings"
         >
-          <span v-if="switchers.areSettingsHidden">show </span>
-          <span v-else>hide </span>
-          text settings
+          {{ switchers.areSettingsHidden ? 'show' : 'hide' }} text settings
         </AppButton>
       </div>
       <TextTransformator
@@ -289,13 +285,14 @@ export default {
         :current-slot-index="currentSlotIndex"
         :post="post"
         :preview-settings="previewSettings"
+        :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
         :is-create-bulk-images-requested="statuses.isCreateBulkImagesRequested"
         :is-render-ongoing="statuses.isRenderOngoing"
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
-        @set-rendering-status="setStatus"
-        @set-rerendering-need="setStatus"
-        @set-create-bulk-images-request-status="setStatus"
+        @set-rendering-status="setStatus('isRenderOngoing', $event)"
+        @set-rerendering-need="setStatus('isRerenderNeeded', $event)"
+        @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
       />
       <div class="items-grid-wrapper">
         <div class="toggle-button-wrapper markdown">
@@ -304,9 +301,7 @@ export default {
             markdown
             @click="toggleMarkdownHint"
           >
-            <span v-if="switchers.isMarkdownHintHidden">show </span>
-            <span v-else>hide </span>
-            markdown hint
+            {{ switchers.isMarkdownHintHidden ? 'show' : 'hide' }} markdown hint
           </AppButton>
         </div>
         <div
@@ -328,9 +323,10 @@ export default {
         :current-slot-index="currentSlotIndex"
         :images="images"
         :slots="post.slots"
+        :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
         :is-rerender-needed="statuses.isRerenderNeeded"
         :is-project-filled="isProjectFilled"
-        @set-create-bulk-images-request-status="setStatus"
+        @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
@@ -342,9 +338,9 @@ export default {
         :is-project-published="statuses.isProjectPublished"
         :is-project-saved="statuses.isProjectSaved"
         @set-project-id="setProjectId"
-        @set-server-request-status="setStatus"
-        @set-save-status="setStatus"
-        @set-publish-status="setStatus"
+        @set-server-request-status="setStatus('isServerRequestOngoing', $event)"
+        @set-save-status="setStatus('isProjectSaved', $event)"
+        @set-publish-status="setStatus('isProjectPublished', $event)"
         @reset-project="resetProject"
         @show-notification="showNotification"
       />
@@ -358,6 +354,7 @@ export default {
 @import '@/assets/global';
 @import '@/assets/preview-container';
 @import '@/assets/app-transition';
+@import '@/assets/fonts';
 
 .app {
   display: flex;
@@ -454,6 +451,7 @@ export default {
     }
     .toggle-button-wrapper {
       width: var(--preview-width);
+      margin: 0 auto;
     }
   }
 }

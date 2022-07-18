@@ -4,7 +4,7 @@
 
 ###### *The SPA uses VueJS, SCSS, libraries (dom-to-image, markdown-it, debounce), built with Vite.*
 
-Write your text, stylize it with Markdown, apply some settings
+Write your text, stylize it with Markdown, use settings to customize font, indents and other,
 and download rendered picture for further use,
 or copy it to clipboard.
 

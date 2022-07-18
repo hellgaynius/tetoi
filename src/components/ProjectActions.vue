@@ -39,13 +39,13 @@ export default {
 
   methods: {
     publishProject() {
-      this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
+      this.$emit('set-server-request-status', true);
 
       projectApi.publish(this.post)
         .then(response => {
           this.$emit('set-project-id', response.id);
-          this.$emit('set-publish-status', 'isProjectPublished', true);
-          this.$emit('set-save-status', 'isProjectSaved', true);
+          this.$emit('set-publish-status', true);
+          this.$emit('set-save-status', true);
           browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
@@ -62,16 +62,16 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
+          this.$emit('set-server-request-status', false);
         });
     },
 
     updateProject() {
-      this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
+      this.$emit('set-server-request-status', true);
 
       projectApi.update(this.post, this.projectId)
         .then(() => {
-          this.$emit('set-save-status', 'isProjectSaved', true);
+          this.$emit('set-save-status', true);
           this.$emit('show-notification', {
               type: 'info',
               text: `Updates were saved successfully`,
@@ -84,13 +84,13 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
+          this.$emit('set-server-request-status', false);
         });
     },
 
     async deleteProject() {
       if (await ask()) {
-        this.$emit('set-server-request-status', 'isServerRequestOngoing', true);
+        this.$emit('set-server-request-status', true);
 
         projectApi.delete(this.projectId)
           .then(() => {
@@ -102,8 +102,8 @@ export default {
                 text: `Project ${this.projectId} deleted`,
               });
             this.$emit('set-project-id', null);
-            this.$emit('set-save-status', 'isProjectSaved', false);
-            this.$emit('set-publish-status', 'isProjectPublished', false);
+            this.$emit('set-save-status', false);
+            this.$emit('set-publish-status', false);
           })
           .catch(error => {
             this.$emit('show-notification', {
@@ -112,7 +112,7 @@ export default {
               });
           })
           .finally(() => {
-            this.$emit('set-server-request-status', 'isServerRequestOngoing', false);
+            this.$emit('set-server-request-status', false);
           });  
       };
     },
@@ -206,8 +206,22 @@ export default {
 }
 
 @media #{breakpoints.$s-media} {
-  .single-button-wrapper {
-    justify-content: center;
+  .project-actions {
+    .buttons-wrapper {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      justify-items: center;
+      align-items: end;
+    }
+    .second-grid-column {
+      grid-column-start: 1;
+    }
+    .third-grid-column {
+      grid-column-start: 1;
+    }
+    .stretch-button {
+      width: var(--preview-width);
+    }
   }
 }
 </style>

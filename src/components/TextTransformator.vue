@@ -11,6 +11,7 @@ const RENDER_BULK_IMAGES_DELAY = 2000;
 
 export default {
   COPIED_REMOVE_DELAY: 2000,
+  CURRENT_TEXTAREA_MAXLENGTH: 5000,
 
   components: {
     AppButton,
@@ -22,6 +23,7 @@ export default {
     isCreateBulkImagesRequested: Boolean,
     isRenderOngoing: Boolean,
     currentSlotIndex: Number,
+    slotsMaxQuantity: Number,
     post: Object,
     previewSettings: Object,
   },
@@ -85,15 +87,9 @@ export default {
 
   watch: {
     currentSlotIndex(index) {
-      this.renderPreview(index);
-    },
-
-    currentTextValue(newValue) { 
-      if (newValue) {
-        this.buildDependentEntitiesForSlotDebounced();
-      } else {
-        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
-      };
+      if (this.currentTextValue) {
+        this.renderPreview(index);
+      }
     },
 
     previewSettings: {
@@ -112,7 +108,6 @@ export default {
     isCreateBulkImagesRequested(value) {
       if (value) {
         this.createBulkImages();
-        this.$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', false);
       };
     },
   },
@@ -122,13 +117,18 @@ export default {
 
     if (this.isCreateBulkImagesRequested) {
       this.createBulkImages();
-      this.$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', false);
     };
   },
 
   methods: {
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
+
+      if (this.currentTextValue) {
+        this.buildDependentEntitiesForSlotDebounced();
+      } else {
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
+      };
     },
 
     saveFullText(event) {
@@ -136,7 +136,7 @@ export default {
     },
 
     async createBulkImages() {
-      this.$emit('set-rendering-status', 'isRenderOngoing', true);
+      this.$emit('set-rendering-status', true);
 
       for (let i = 0; i < this.post.slots.length; i++) {
         if (this.post.slots[i].text) {
@@ -145,8 +145,9 @@ export default {
       };
 
       this.renderPreview(this.currentSlotIndex);
-      this.$emit('set-rendering-status', 'isRenderOngoing', false);
-      this.$emit('set-rerendering-need', 'isRerenderNeeded', false);
+      this.$emit('set-rendering-status', false);
+      this.$emit('set-rerendering-need', false);
+      this.$emit('set-create-bulk-images-request-status', false);
     },
 
     createBulkImagesDebounced: debounce(RENDER_BULK_IMAGES_DELAY, function() {
@@ -174,8 +175,8 @@ export default {
     },
 
     buildDependentEntitiesForSlot(slotIndex) {
-      if (this.post.slots.length == 1) {
-        this.$emit('set-rerendering-need', 'isRerenderNeeded', false);
+      if (this.post.slots.length === 1) {
+        this.$emit('set-rerendering-need', false);
       };
 
       this.renderPreview(slotIndex);
@@ -211,6 +212,7 @@ export default {
             Whole text:
           </h3>
           <textarea 
+            :maxlength="$options.CURRENT_TEXTAREA_MAXLENGTH * this.slotsMaxQuantity"
             :disabled="isDisabled"
             :value="post.fullText"
             @input="saveFullText"
@@ -223,6 +225,7 @@ export default {
             Current page:
           </h3>
           <textarea
+            :maxlength="$options.CURRENT_TEXTAREA_MAXLENGTH"
             :autofocus="isBigScreen"
             :disabled="isDisabled"
             :value="currentTextValue"
@@ -303,7 +306,7 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/fonts';
+@import '@/assets/mixins';
 
 .text-transformator {
   display: flex;
@@ -406,10 +409,7 @@ export default {
     color: colors.$secondary-darker;
     letter-spacing: 1px;
     animation-name: preview-preloader;
-    animation-duration: 0.7s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: cubic-bezier(.75, -0.01, .59, .99);
+    @include preloader-animation;
     @keyframes preview-preloader {
       from {
         opacity: 0.2;

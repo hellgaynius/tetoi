@@ -45,7 +45,7 @@ export const previewSettings = {
         },
         lineHeight: {
           name: 'line height:',
-          value: 1.1,
+          value: 1.2,
           min: 0.5,
           max: 2.5,
           step: 0.05,
@@ -56,6 +56,7 @@ export const previewSettings = {
 
   fonts: {
     name: 'fonts:',
+    default: 'Roboto',
     options: {
       'Philosopher': {
         fallback: 'sans-serif',
@@ -92,3 +93,26 @@ export const previewSettings = {
     },
   },
 }
+
+export function getDefaultSettings() {
+  return {
+    paddings: {
+      left: previewSettings.paddings.default,
+      right: previewSettings.paddings.default,
+      bottom: previewSettings.paddings.default,
+      top: previewSettings.paddings.default,
+    },
+    textApplicants: {
+      headings: {
+        font: previewSettings.fonts.default,
+        fontSize: previewSettings.textApplicants.headings.settings.fontSize.value,
+        lineHeight: previewSettings.textApplicants.headings.settings.lineHeight.value,
+      },
+      mainText: {
+        font: previewSettings.fonts.default,
+        fontSize: previewSettings.textApplicants.mainText.settings.fontSize.value,
+        lineHeight: previewSettings.textApplicants.mainText.settings.lineHeight.value,
+      },
+    },
+  }
+};

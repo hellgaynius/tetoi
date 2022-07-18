@@ -17,7 +17,6 @@ export default {
 
   emits: [
     'update:modelValue',
-    'reset-value',
   ],
 }
 </script>

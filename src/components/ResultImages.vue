@@ -11,6 +11,7 @@ export default {
     slots: Array,
     images: Object,
     currentSlotIndex: Number,
+    slotsMaxQuantity: Number,
     isRerenderNeeded: Boolean,
     isProjectFilled: Boolean,
   },
@@ -82,7 +83,7 @@ export default {
         </div>
       </div>
       <div 
-        v-show="slots.length < 10"
+        v-show="slots.length < slotsMaxQuantity"
         class="add-slot"
         title="add one more page"
       >
@@ -102,7 +103,7 @@ export default {
       </div>
       <AppButton
         button-like
-        @click="$emit('set-create-bulk-images-request-status', 'isCreateBulkImagesRequested', true)"
+        @click="$emit('set-create-bulk-images-request-status', true)"
       >
         update all at once!
       </AppButton>

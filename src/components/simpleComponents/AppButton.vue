@@ -89,10 +89,4 @@ export default {
     font-size: 16px;
   }
 }  
-
-@media #{breakpoints.$s-media} {
-  .markdown {
-    padding: 0 5px;
-  }
-}
 </style>
