@@ -4,6 +4,7 @@ export default {
     buttonLike: Boolean,
     linkLike: Boolean,
     big: Boolean,
+    settings: Boolean,
     markdown: Boolean,
   }
 }
@@ -16,7 +17,8 @@ export default {
       'button-like': buttonLike,
       'link-like': linkLike,
       big,
-      markdown
+      markdown,
+      settings,
     }"
   >
     <slot />
@@ -26,33 +28,38 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .app-button {
   display: block;
-  min-width: 100px;
   text-align: center;
-  font-size: 12px;
+  font-size: 1em;
   border: none;
   letter-spacing: 1px;
+  background-color: transparent;
+  transition: color 0.2s, box-shadow 0.2s, border 0.2s;
   &.button-like {
+    min-width: 100px;
     padding: 10px 15px;
-    border-radius: 5px;
-    background-color: colors.$active-button-background;
-    color: colors.$active-button-text;
-    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+    border: 1px solid colors.$active-button-background;
+    box-shadow: 3px 3px colors.$active-button-background;
+    color: colors.$secondary-darker;
+    background-color: colors.$app-background;
     cursor: pointer;
-    @include light-shadow;
     &:hover {
-      background-color: colors.$active-button-hover;
+      border: 1px solid colors.$active-button-hover;
+      box-shadow: 3px 3px colors.$active-button-hover;
     }
     &:active {
-      background-color: colors.$active-button-active;
+      border: 1px solid colors.$active-button-active;
+      box-shadow: 3px 3px colors.$active-button-active;
     }
     &:disabled {
-      background-color: colors.$main;
-      @include inactive-button;
+      color: colors.$secondary;
+      text-decoration: none;
+      border: none;
+      cursor: default;
+      border: 1px solid colors.$secondary;
+      box-shadow: 3px 3px colors.$secondary;
     }
   }
   &.link-like {
@@ -66,7 +73,14 @@ export default {
       color: colors.$secondary;
     }
     &:disabled {
-      @include inactive-button;
+      color: colors.$secondary;
+      box-shadow: none;
+      text-decoration: none;
+      border: none;
+      cursor: default;
+    }
+    &.markdown {
+      margin-bottom: 20px;
     }
   }
   &.big {
@@ -75,10 +89,4 @@ export default {
     font-size: 16px;
   }
 }  
-
-@media #{breakpoints.$s-media} {
-  .markdown {
-    margin: 0 auto;
-  }
-}
 </style>

@@ -78,8 +78,6 @@
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .notification {
   position: fixed;
@@ -88,8 +86,7 @@
   top: 30px;
   right: 30px;
   padding: 20px 30px;
-  border-radius: 7px;
-  background-color: colors.$secondary-light;
+  background-color: colors.$light;
   text-align: center;
   overflow-wrap: break-word;
   &.removed {
@@ -103,7 +100,7 @@
   &.warning {
     box-shadow: 3px 3px 0 colors.$warning;
     border: 2px solid colors.$warning;
-    color: colors.$warning;
+    color: colors.$secondary-darker;
     & .close-icon {
       border: 1px solid colors.$warning;
       &::before {
@@ -117,7 +114,7 @@
   &.info {
     box-shadow: 3px 3px 0 colors.$info;
     border: 2px solid colors.$info;
-    color: colors.$info;
+    color: colors.$secondary-darker;
     & .close-icon {
       border: 1px solid colors.$info;
       &::before {
@@ -137,7 +134,7 @@
     text-align: center;
     font-size: 14px;
     border-radius: 50%;
-    background-color: colors.$secondary-light;
+    background-color: colors.$light;
     cursor: pointer;
     &::before,
     &::after {

@@ -1,0 +1,14 @@
+// There is a known issue with dom-to-image library: it does not see linked fonts while creating images,
+// and a workaround is to copy all the offered CSS styles from the import link.
+// https://github.com/tsayen/dom-to-image/issues/59
+
+@import 
+'@/assets/fonts/Alice', 
+'@/assets/fonts/BonaNova', 
+'@/assets/fonts/ChakraPetch', 
+'@/assets/fonts/CormorantInfant', 
+'@/assets/fonts/Finlandica', 
+'@/assets/fonts/FiraMono', 
+'@/assets/fonts/Jura', 
+'@/assets/fonts/Philosopher', 
+'@/assets/fonts/Roboto';

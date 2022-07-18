@@ -1,20 +1,26 @@
 <script>
+import PreviewSettings from '@/components/PreviewSettings.vue';
 import TextTransformator from '@/components/TextTransformator.vue';
 import ResultImages from '@/components/ResultImages.vue';
 import ProjectActions from '@/components/ProjectActions.vue';
 import MarkdownHint from '@/components/MarkdownHint.vue';
-import AppPreloader from '@/components/simpleComponents/AppPreloader.vue'
-import AppNotification from '@/components/simpleComponents/AppNotification.vue'
-import { browserStorage } from '@/browserStorage/browserStorage.js'
+import AppButton from '@/components/simpleComponents/AppButton.vue';
+import AppPreloader from '@/components/helperComponents/AppPreloader.vue';
+import AppNotification from '@/components/helperComponents/AppNotification.vue';
+import AppConfirmation from '@/components/helperComponents/AppConfirmation.vue';
+import { browserStorage } from '@/browserStorage/browserStorage.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
 export default {
-  LOCAL_STORAGE_ITEM_NAME: 'localProject',
+  SLOTS_MAX_QUANTITY: 10,
 
   components: {
+    AppButton,
     AppPreloader,
     AppNotification,
+    AppConfirmation,
+    PreviewSettings,
     TextTransformator,
     MarkdownHint,
     ResultImages,
@@ -23,12 +29,7 @@ export default {
 
   data() {
     return {
-      isRequestOngoing: false,
-      isProjectSaved: false,
-      isProjectPublished: false,
-      isProjectLoaded: false,
       projectId: null,
-      isMarkdownHintHidden: true,
       notification: {
         show: false,
         type: 'info',
@@ -37,6 +38,20 @@ export default {
       post: {},
       images: {},
       currentSlotIndex: 0,
+      previewSettings: {},
+      statuses: {
+        isServerRequestOngoing: false,
+        isProjectSaved: false,
+        isProjectPublished: false,
+        isRerenderNeeded: false,
+        isCreateBulkImagesRequested: false,
+        isRenderOngoing: false,
+        areInitialPreviewSettingsPassed: false,
+      },
+      switchers: {
+        isMarkdownHintHidden: true,
+        areSettingsHidden: true,
+      },
     }
   },
 
@@ -44,6 +59,25 @@ export default {
     isProjectFilled() {
       return !!(this.post?.fullText ||
         this.post?.slots.some(slot => slot.text));
+    },
+  },
+
+  watch: {
+    post: {
+      handler() {
+        browserStorage.handlePostObject(
+          this.isProjectFilled, 
+          this.statuses.isProjectPublished, 
+          'project',
+          this.post,
+        );
+
+        if (!this.isProjectFilled) {
+          this.statuses.isRerenderNeeded = false;
+        }
+      },
+
+      deep: true,
     },
   },
 
@@ -73,17 +107,19 @@ export default {
 
       if (this.projectId.length > 1) {
         serverProject = await this.fetchProject(this.projectId);
-      } 
+      };
 
       if (!serverProject) {
         this.projectId = null;
-        localProject = browserStorage.fetch(this.$options.LOCAL_STORAGE_ITEM_NAME);
+        localProject = browserStorage.fetch('project');
+      };
 
+      if (localProject) {
         this.showNotification({
           type: 'info',
           text: `Project is saved locally for this browser. <br>
             To have access from everywhere, publish your project.`,
-        })
+        });
       };
 
       const project = serverProject || localProject;
@@ -91,16 +127,17 @@ export default {
       if (project) {
         this.post = project;
       };
-      this.isProjectLoaded = true;
+
+      this.statuses.isCreateBulkImagesRequested = true;
     },
 
     fetchProject(projectId) {
-      this.isRequestOngoing = true;
+      this.statuses.isServerRequestOngoing = true;
 
       return projectApi.get(projectId)
         .then(serverResponse => {
-          this.isProjectPublished = true;
-          this.isProjectSaved = true;
+          this.statuses.isProjectPublished = true;
+          this.statuses.isProjectSaved = true;
           this.showNotification({
             type: 'info',
             text: 'Successfuly loaded project from server',
@@ -118,7 +155,7 @@ export default {
           return null;
         })
         .finally(() => {
-          this.isRequestOngoing = false;
+          this.statuses.isServerRequestOngoing = false;
         });
     },
 
@@ -139,22 +176,23 @@ export default {
         this.post.slots[this.currentSlotIndex].text = textValue;
       } else {
         this.post.fullText = textValue;
-      }
+      };
 
-      if (this.isProjectPublished) {
-        this.isProjectSaved = false;
-      }
+      if (this.statuses.isProjectPublished) {
+        this.statuses.isProjectSaved = false;
+      };
+    },
 
-      browserStorage.handle(
-        this.isProjectFilled, 
-        this.isProjectPublished, 
-        this.$options.LOCAL_STORAGE_ITEM_NAME, 
-        this.post,
-      );
+    toggleSwitcher(switcher) {
+      this.switchers[switcher] = !this.switchers[switcher];
+    },
+
+    toggleSettings() {
+      this.switchers.areSettingsHidden = !this.switchers.areSettingsHidden;
     },
 
     toggleMarkdownHint() {
-      this.isMarkdownHintHidden = !this.isMarkdownHintHidden;
+      this.switchers.isMarkdownHintHidden = !this.switchers.isMarkdownHintHidden;
     },
 
     changeCurrentSlotIndex(index) {
@@ -165,7 +203,7 @@ export default {
       this.images[slotId] = imgSrc;
     },
 
-    removeSlot(id) {
+    async removeSlot(id) {
       const deletedSlotIndex = this.post.slots.findIndex(slot => slot.id === id);
 
       if (this.currentSlotIndex === deletedSlotIndex) {
@@ -173,7 +211,8 @@ export default {
       } else if (this.currentSlotIndex > deletedSlotIndex) {
         this.currentSlotIndex--;
       };
-
+      // nextTick here is due to confusing order of Vue handling interaction between components
+      await this.$nextTick();
       this.post.slots.splice(deletedSlotIndex, 1);
     },
 
@@ -181,83 +220,127 @@ export default {
       this.projectId = '/' + id;
     },
 
-    setRequestStatus(status) {
-      this.isRequestOngoing = status;
-    },
+    setStatus(entity, status) {
+      this.statuses[entity] = status;
+    }, 
 
-    setSaveStatus(status) {
-      this.isProjectSaved = status;
-    },
+    setSettings(settings) {
+      this.previewSettings = settings;
 
-    setPublishStatus(status) {
-      this.isProjectPublished = status;
+      if (this.isProjectFilled) {
+        this.areInitialPreviewSettingsPassed = true;
+      };
+
+      if (this.areInitialPreviewSettingsPassed) {
+        this.statuses.isRerenderNeeded = true;
+      };
     },
 
     resetProject() {
       this.setInitialPost(),
       this.currentSlotIndex = 0;
       this.images = [];
+      this.showNotification({
+        type: 'info',
+        text: 'Your project was reset',
+      });
     },
   },
 };
 </script>
 
 <template>
-  <AppPreloader :is-active="isRequestOngoing" />
+  <AppPreloader :is-active="statuses.isServerRequestOngoing || statuses.isRenderOngoing" />
   <AppNotification
     :notification="notification"
     @close-notification="closeNotification"
   />
+  <AppConfirmation />
   <div class="app">
-    <h1 class="logo">tetoi</h1>
+    <h1 class="logo">
+      tetoi
+    </h1>
     <main class="main">
       <div 
-        class="preloader-mask"
-        v-show="isRequestOngoing"
-      ></div>
-      <div
-        v-show="isProjectPublished"
-        class="project-status"
+        class="app-preloader-mask"
+        v-show="statuses.isRenderOngoing"
       >
-        <span 
-          v-if="isProjectSaved"
-          class="status-text saved"
-        >saved</span>
-        <span 
-          v-else
-          class="status-text unsaved"
-        >unsaved</span>
+      </div>
+      <PreviewSettings
+        v-show="!switchers.areSettingsHidden"
+        @change="setSettings"
+      />
+      <div class="toggle-button-wrapper">
+        <AppButton 
+          link-like
+          settings
+          @click="toggleSettings"
+        >
+          {{ switchers.areSettingsHidden ? 'show' : 'hide' }} text settings
+        </AppButton>
       </div>
       <TextTransformator
-        :is-disabled="isRequestOngoing"
-        :is-project-loaded="isProjectLoaded"
+        :is-disabled="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
-        :is-markdown-hint-hidden="isMarkdownHintHidden"
         :current-slot-index="currentSlotIndex"
         :post="post"
-        @toggle-markdown-hint="toggleMarkdownHint"
+        :preview-settings="previewSettings"
+        :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
+        :is-create-bulk-images-requested="statuses.isCreateBulkImagesRequested"
+        :is-render-ongoing="statuses.isRenderOngoing"
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
+        @set-rendering-status="setStatus('isRenderOngoing', $event)"
+        @set-rerendering-need="setStatus('isRerenderNeeded', $event)"
+        @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
       />
-      <MarkdownHint v-show="!isMarkdownHintHidden"/>
+      <div class="items-grid-wrapper">
+        <div class="toggle-button-wrapper markdown">
+          <AppButton 
+            link-like
+            markdown
+            @click="toggleMarkdownHint"
+          >
+            {{ switchers.isMarkdownHintHidden ? 'show' : 'hide' }} markdown hint
+          </AppButton>
+        </div>
+        <div
+          v-show="statuses.isProjectPublished"
+          class="project-status"
+        >
+          <span 
+            v-if="statuses.isProjectSaved"
+            class="status-text saved"
+          >saved</span>
+          <span 
+            v-else
+            class="status-text unsaved"
+          >unsaved</span>
+        </div>
+      </div>
+      <MarkdownHint v-show="!switchers.isMarkdownHintHidden"/>
       <ResultImages
         :current-slot-index="currentSlotIndex"
         :images="images"
         :slots="post.slots"
+        :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
+        :is-rerender-needed="statuses.isRerenderNeeded"
+        :is-project-filled="isProjectFilled"
+        @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
       <ProjectActions
         :post="post"
         :projectId="projectId"
-        :is-request-ongoing="isRequestOngoing"
+        :is-request-ongoing="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
-        :is-project-published="isProjectPublished"
-        :is-project-saved="isProjectSaved"
+        :is-project-published="statuses.isProjectPublished"
+        :is-project-saved="statuses.isProjectSaved"
         @set-project-id="setProjectId"
-        @set-request-status="setRequestStatus"
-        @set-save-status="setSaveStatus"
-        @set-publish-status="setPublishStatus"
+        @set-server-request-status="setStatus('isServerRequestOngoing', $event)"
+        @set-save-status="setStatus('isProjectSaved', $event)"
+        @set-publish-status="setStatus('isProjectPublished', $event)"
         @reset-project="resetProject"
         @show-notification="showNotification"
       />
@@ -268,16 +351,26 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
 @import '@/assets/global';
+@import '@/assets/preview-container';
+@import '@/assets/app-transition';
+@import '@/assets/fonts';
 
 .app {
   display: flex;
   flex-direction: column;
   .logo {
     position: absolute;
+    top: 30px;
     left: 100px;
-    font: bold small-caps 76px 'Marcellus SC', serif;
+    font: bold 76px 'Chakra Petch', sans-serif;
+    background-image: linear-gradient(colors.$main-active, colors.$secondary);
+    background-size: 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    -moz-text-fill-color: transparent;
   }
   .main {
     position: relative;
@@ -288,27 +381,39 @@ export default {
     margin: 50px auto 150px auto;
     padding: 50px 50px 80px 50px;
     background-color: colors.$app-background;
-    border-radius: var(--main-border-radius);
     box-shadow: 10px 10px colors.$secondary;
+    border: 2px solid colors.$secondary;
   }
-  .preloader-mask {
+  .app-preloader-mask {
     position: absolute;
     z-index: 9;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    border-radius: var(--main-border-radius);
     background-color: colors.$app-background;
     opacity: 0.5;
   }
+  .items-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 10px;
+  }
+  .toggle-button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    &.markdown {
+      justify-content: flex-start;
+    }
+  }
   .project-status {
-    text-align: right;
+    text-align: center;
+    padding-bottom: 20px;
   }
   .status-text {
     letter-spacing: 4px;
     &.saved {
-      color: colors.$secondary-active;
+      color: colors.$main-active;
     }
     &.unsaved {
       color: colors.$secondary-darker;
@@ -322,7 +427,7 @@ export default {
       position: static;
       min-width: 370px;
       padding-top: 30px;
-      font-size: 66px;
+      margin: 0;
       text-align: center;
     }
   }
@@ -333,11 +438,20 @@ export default {
     .main {
       width: 100%;
       min-width: 370px;
-      padding: 40px 10px 80px 10px;
+      padding: 40px 20px 80px 10px;
       box-shadow: none;
+      border: none;
     }
     .project-status {
       padding: 20px;
+    }
+    .items-grid-wrapper {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .toggle-button-wrapper {
+      width: var(--preview-width);
+      margin: 0 auto;
     }
   }
 }

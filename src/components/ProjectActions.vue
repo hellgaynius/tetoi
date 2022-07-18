@@ -1,5 +1,6 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
+import { ask } from '@/processes/confirmation';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 import { projectApi } from '@/api/projectApi.js';
 
@@ -9,7 +10,7 @@ export default {
   },
 
   props: {
-    isRequestOngoing: Boolean,
+    isServerRequestOngoing: Boolean,
     isProjectPublished: Boolean,
     isProjectSaved: Boolean,
     isProjectFilled: Boolean,
@@ -19,7 +20,7 @@ export default {
 
   emits: [
     'set-project-id',
-    'set-request-status',
+    'set-server-request-status',
     'set-save-status', 
     'set-publish-status',
     'reset-project', 
@@ -28,24 +29,24 @@ export default {
 
   computed: {
     isLocalProjectButtonDisabled() {
-      return this.isProjectPublished || !this.isProjectFilled || this.isRequestOngoing;
+      return this.isProjectPublished || !this.isProjectFilled || this.isServerRequestOngoing;
     },
 
     isSaveButtonDisabled() {
-      return this.isProjectSaved || this.isRequestOngoing;
+      return this.isProjectSaved || this.isServerRequestOngoing;
     },
   },
 
   methods: {
     publishProject() {
-      this.$emit('set-request-status', true);
+      this.$emit('set-server-request-status', true);
 
       projectApi.publish(this.post)
         .then(response => {
           this.$emit('set-project-id', response.id);
           this.$emit('set-publish-status', true);
           this.$emit('set-save-status', true);
-          browserStorage.reset();
+          browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
               type: 'info',
@@ -61,12 +62,12 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-request-status', false);
+          this.$emit('set-server-request-status', false);
         });
     },
 
     updateProject() {
-      this.$emit('set-request-status', true);
+      this.$emit('set-server-request-status', true);
 
       projectApi.update(this.post, this.projectId)
         .then(() => {
@@ -83,39 +84,44 @@ export default {
             });
         })
         .finally(() => {
-          this.$emit('set-request-status', false);
+          this.$emit('set-server-request-status', false);
         });
     },
 
-    deleteProject() {
-      this.$emit('set-request-status', true);
+    async deleteProject() {
+      if (await ask()) {
+        this.$emit('set-server-request-status', true);
 
-      projectApi.delete(this.projectId)
-        .then(() => {
-          window.history.replaceState({}, '', window.location.origin);
-          this.resetProject();
-          this.$emit('show-notification', {
-              type: 'info',
-              text: `Project ${this.projectId} deleted`,
-            });
-          this.$emit('set-project-id', null);
-          this.$emit('set-save-status', false);
-          this.$emit('set-publish-status', false);
-        })
-        .catch(error => {
-          this.$emit('show-notification', {
-              type: 'warning',
-              text: error,
-            });
-        })
-        .finally(() => {
-          this.$emit('set-request-status', false);
-        });
+        projectApi.delete(this.projectId)
+          .then(() => {
+            window.history.replaceState({}, '', window.location.origin);
+            browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
+            this.$emit('reset-project');
+            this.$emit('show-notification', {
+                type: 'info',
+                text: `Project ${this.projectId} deleted`,
+              });
+            this.$emit('set-project-id', null);
+            this.$emit('set-save-status', false);
+            this.$emit('set-publish-status', false);
+          })
+          .catch(error => {
+            this.$emit('show-notification', {
+                type: 'warning',
+                text: error,
+              });
+          })
+          .finally(() => {
+            this.$emit('set-server-request-status', false);
+          });  
+      };
     },
 
-    resetProject() {
-      browserStorage.reset();
-      this.$emit('reset-project');
+    async resetProject() {
+      if (await ask()) {
+        browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
+        this.$emit('reset-project');
+      };
     },
   },
 }
@@ -127,7 +133,7 @@ export default {
       <div class="buttons-wrapper">
         <div class="second-grid-column">
           <AppButton
-            class="action-button"
+            class="stretch-button"
             :disabled="isLocalProjectButtonDisabled"
             button-like
             big
@@ -136,9 +142,8 @@ export default {
             publish
           </AppButton>
         </div>
-        <div class="third-grid-column">
+        <div class="third-grid-column single-button-wrapper">
           <AppButton
-            class="action-button"
             :disabled="isLocalProjectButtonDisabled"
             link-like
             @click="resetProject"
@@ -146,14 +151,13 @@ export default {
             reset project
           </AppButton>
         </div>
-
       </div>
     </div>
     <div v-show="isProjectPublished">
       <div class="buttons-wrapper">
         <div class="second-grid-column">
           <AppButton
-            class="action-button"
+            class="stretch-button"
             :disabled="isSaveButtonDisabled"
             button-like
             big
@@ -162,10 +166,9 @@ export default {
             save
           </AppButton>
         </div>
-        <div class="third-grid-column">
+        <div class="third-grid-column single-button-wrapper">
           <AppButton
-            class="action-button"
-            :disabled="isRequestOngoing"
+            :disabled="isServerRequestOngoing"
             link-like
             @click="deleteProject"
           >
@@ -180,8 +183,6 @@ export default {
 <style lang="scss">
 @use '@/assets/colors';
 @use '@/assets/breakpoints';
-@import '@/assets/mixins';
-@import '@/assets/global';
 
 .buttons-wrapper {
   display: grid;
@@ -189,7 +190,7 @@ export default {
   gap: 20px;
   padding-top: 20px;
   align-items: baseline;
-  .action-button {
+  .stretch-button {
     width: 100%;
   }
   .second-grid-column {
@@ -198,11 +199,29 @@ export default {
   .third-grid-column {
     grid-column-start: 3;
   }
+  .single-button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 
 @media #{breakpoints.$s-media} {
-  .third-grid-column {
-    text-align: center;
+  .project-actions {
+    .buttons-wrapper {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      justify-items: center;
+      align-items: end;
+    }
+    .second-grid-column {
+      grid-column-start: 1;
+    }
+    .third-grid-column {
+      grid-column-start: 1;
+    }
+    .stretch-button {
+      width: var(--preview-width);
+    }
   }
 }
 </style>
