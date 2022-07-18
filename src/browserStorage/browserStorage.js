@@ -1,23 +1,23 @@
-const LOCAL_SETTINGS_ITEM_NAME = 'localSettings';
-const LOCAL_PROJECT_ITEM_NAME = 'localProject';
+const SETTINGS_ITEM_NAME = 'settings';
+const PROJECT_ITEM_NAME = 'project';
 
-const storageItems = {
-  'settings': LOCAL_SETTINGS_ITEM_NAME,
-  'project': LOCAL_PROJECT_ITEM_NAME,
+const storageMatchingTable = {
+  'settings': SETTINGS_ITEM_NAME,
+  'project': PROJECT_ITEM_NAME,
 };
 
 export const browserStorage = {
   remove(itemName) {
-    localStorage.removeItem(storageItems[itemName]);
+    localStorage.removeItem(storageMatchingTable[itemName]);
   },
 
   saveItem(itemName, object) {
-    localStorage.setItem(storageItems[itemName], JSON.stringify(object));
+    localStorage.setItem(storageMatchingTable[itemName], JSON.stringify(object));
   },
 
   handlePostObject(isProjectFilled, isProjectPublished, itemName, object) {
     if (!isProjectFilled) {
-      this.remove(storageItems[itemName]);
+      this.remove(storageMatchingTable[itemName]);
     } else if (isProjectPublished) {
       return false;
     } else {
@@ -26,7 +26,7 @@ export const browserStorage = {
   },
 
   fetch(itemName) {
-    const storage = localStorage.getItem(storageItems[itemName]);
+    const storage = localStorage.getItem(storageMatchingTable[itemName]);
 
     return storage ? JSON.parse(storage) : null;
   },

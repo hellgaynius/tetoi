@@ -7,7 +7,6 @@ export default {
   },
 
   props: {
-    value: Number,
     min: Number,
     max: Number,
     step: Number,
