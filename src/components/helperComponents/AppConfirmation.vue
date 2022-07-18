@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import { modalPromise } from '@/processes/confirmation.js'
-import { useConfirmation, modalOff } from '@/processes/confirmation';
+import { useConfirmation, confirmation, modalOff } from '@/processes/confirmation';
 
 export default {
   components: {
@@ -101,8 +101,8 @@ export default {
     height: 250px;
     padding: 50px;
     background-color: colors.$app-background;
-    border: 3px solid colors.$active-button-background;
-    box-shadow: 5px 5px colors.$active-button-background;
+    border: 3px solid colors.$main-active;
+    box-shadow: 5px 5px colors.$main-active;
     color: colors.$secondary-darker;
   }
   .question {

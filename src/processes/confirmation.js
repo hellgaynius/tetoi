@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
 import { DeferredBoolean } from '@/utils/utils.js';
 
-const confirmation = reactive({
+export const confirmation = reactive({
   isModalOn: false,
 });
 

@@ -86,8 +86,7 @@
   top: 30px;
   right: 30px;
   padding: 20px 30px;
-  border-radius: 7px;
-  background-color: colors.$secondary-light;
+  background-color: colors.$light;
   text-align: center;
   overflow-wrap: break-word;
   &.removed {
@@ -135,7 +134,7 @@
     text-align: center;
     font-size: 14px;
     border-radius: 50%;
-    background-color: colors.$secondary-light;
+    background-color: colors.$light;
     cursor: pointer;
     &::before,
     &::after {
