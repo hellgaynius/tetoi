@@ -43,7 +43,7 @@ export default {
         isServerRequestOngoing: false,
         isProjectSaved: false,
         isProjectPublished: false,
-        isRerenderNeeded: false,
+        isRenderNeeded: false,
         isCreateBulkImagesRequested: false,
         isRenderOngoing: false,
         areInitialPreviewSettingsPassed: false,
@@ -60,20 +60,27 @@ export default {
       return !!(this.post?.fullText ||
         this.post?.slots.some(slot => slot.text));
     },
+
+    project() {
+      return {
+        post: this.post,
+        settings: this.previewSettings,
+      }
+    }
   },
 
   watch: {
     post: {
       handler() {
-        browserStorage.handlePostObject(
-          this.isProjectFilled, 
-          this.statuses.isProjectPublished, 
+        browserStorage.saveItem(
           'project',
           this.post,
+          this.statuses.isProjectPublished, 
+          this.isProjectFilled, 
         );
 
         if (!this.isProjectFilled) {
-          this.statuses.isRerenderNeeded = false;
+          this.statuses.isRenderNeeded = false;
         }
       },
 
@@ -125,7 +132,8 @@ export default {
       const project = serverProject || localProject;
 
       if (project) {
-        this.post = project;
+        this.post = project.post;
+        this.previewSettings = project.settings;
       };
 
       this.statuses.isCreateBulkImagesRequested = true;
@@ -232,7 +240,7 @@ export default {
       };
 
       if (this.areInitialPreviewSettingsPassed) {
-        this.statuses.isRerenderNeeded = true;
+        this.statuses.isRenderNeeded = true;
       };
     },
 
@@ -267,6 +275,7 @@ export default {
       >
       </div>
       <PreviewSettings
+        :is-project-published="statuses.isProjectPublished"
         v-show="!switchers.areSettingsHidden"
         @change="setSettings"
       />
@@ -291,7 +300,7 @@ export default {
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
         @set-rendering-status="setStatus('isRenderOngoing', $event)"
-        @set-rerendering-need="setStatus('isRerenderNeeded', $event)"
+        @set-rendering-need="setStatus('isRenderNeeded', $event)"
         @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
       />
       <div class="items-grid-wrapper">
@@ -324,14 +333,14 @@ export default {
         :images="images"
         :slots="post.slots"
         :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
-        :is-rerender-needed="statuses.isRerenderNeeded"
+        :is-render-needed="statuses.isRenderNeeded"
         :is-project-filled="isProjectFilled"
         @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
       <ProjectActions
-        :post="post"
+        :project="project"
         :projectId="projectId"
         :is-request-ongoing="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
@@ -349,12 +358,12 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
-@import '@/assets/global';
-@import '@/assets/preview-container';
-@import '@/assets/app-transition';
-@import '@/assets/fonts';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
+@import '@/assets/style/global';
+@import '@/assets/style/preview-container';
+@import '@/assets/style/app-transition';
+@import '@/assets/style/fonts';
 
 .app {
   display: flex;

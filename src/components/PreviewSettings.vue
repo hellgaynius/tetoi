@@ -12,6 +12,10 @@ export default {
     SettingBlockWrapper,
   },
 
+  props: {
+    isProjectPublished: Boolean,
+  },
+
   emits: [
     'change',
   ],
@@ -40,7 +44,11 @@ export default {
           this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.headings.font].fallback,
       };
 
-      browserStorage.saveItem('settings', this.settingsToPass);
+      browserStorage.saveItem(
+        'settings', 
+        this.settingsToPass,
+        this.isProjectPublished, 
+      );
       this.$emit('change', settingsValues);
     },
 
@@ -154,8 +162,8 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
 
 .preview-settings {
   margin-bottom: 10px;

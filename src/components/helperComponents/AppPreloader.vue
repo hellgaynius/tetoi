@@ -18,8 +18,8 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@import '@/assets/mixins';
+@use '@/assets/style/colors';
+@import '@/assets/style/mixins';
 
 .preloader-bar {
   position: fixed;
