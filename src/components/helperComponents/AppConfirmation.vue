@@ -1,7 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import { modalPromise } from '@/processes/confirmation.js'
-import { useConfirmation, confirmation, modalOff } from '@/processes/confirmation';
+import { useConfirmation, modalOff } from '@/processes/confirmation';
 
 export default {
   components: {
@@ -56,8 +56,11 @@ export default {
     @click="cancel"
   ></div>
   <div class="question-window">
-    <div class="question">
-      are you sure?
+    <div 
+      class="question"
+      :class="{ 'big-text': confirmation.isTextBig }"
+    >
+      {{ confirmation.question }}
       <div class="buttons-container">
         <AppButton
           button-like
@@ -80,8 +83,8 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
 
 .app-confirmation {
   .overlay {
@@ -98,7 +101,7 @@ export default {
     top: 40%;
     transform: translate(-50%, -50%);
     width: 450px;
-    height: 250px;
+    min-height: 250px;
     padding: 50px;
     background-color: colors.$app-background;
     border: 3px solid colors.$main-active;
@@ -108,7 +111,10 @@ export default {
   .question {
     margin: 0 auto;
     text-align: center;
-    font-size: 40px;
+    font-size: 28px;
+    &.big-text {
+      font-size: 40px;
+    }
   }
   .buttons-container {
     display: grid;

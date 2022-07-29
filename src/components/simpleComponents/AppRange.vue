@@ -51,7 +51,7 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
+@use '@/assets/style/colors';
 
 .app-range {
   display: flex;

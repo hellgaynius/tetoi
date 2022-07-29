@@ -33,7 +33,7 @@ export default {
     'save-text', 
     'change-slot-image',
     'set-rendering-status',
-    'set-rerendering-need',
+    'set-rendering-need',
     'set-create-bulk-images-request-status',
   ],
 
@@ -89,7 +89,15 @@ export default {
     currentSlotIndex(index) {
       if (this.currentTextValue) {
         this.renderPreview(index);
-      }
+      };
+    },
+
+    currentTextValue(value) {
+      if (value) {
+        this.buildDependentEntitiesForSlotDebounced();
+      } else {
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
+      };
     },
 
     previewSettings: {
@@ -123,12 +131,6 @@ export default {
   methods: {
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
-
-      if (this.currentTextValue) {
-        this.buildDependentEntitiesForSlotDebounced();
-      } else {
-        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
-      };
     },
 
     saveFullText(event) {
@@ -146,7 +148,7 @@ export default {
 
       this.renderPreview(this.currentSlotIndex);
       this.$emit('set-rendering-status', false);
-      this.$emit('set-rerendering-need', false);
+      this.$emit('set-rendering-need', false);
       this.$emit('set-create-bulk-images-request-status', false);
     },
 
@@ -176,7 +178,7 @@ export default {
 
     buildDependentEntitiesForSlot(slotIndex) {
       if (this.post.slots.length === 1) {
-        this.$emit('set-rerendering-need', false);
+        this.$emit('set-rendering-need', false);
       };
 
       this.renderPreview(slotIndex);
@@ -304,9 +306,9 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
-@import '@/assets/mixins';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
+@import '@/assets/style/mixins';
 
 .text-transformator {
   display: flex;

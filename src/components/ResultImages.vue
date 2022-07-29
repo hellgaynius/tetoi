@@ -12,7 +12,7 @@ export default {
     images: Object,
     currentSlotIndex: Number,
     slotsMaxQuantity: Number,
-    isRerenderNeeded: Boolean,
+    isRenderNeeded: Boolean,
     isProjectFilled: Boolean,
   },
 
@@ -94,8 +94,8 @@ export default {
       </div>
     </div>
     <div 
-      class="optional-notification rerender-offer"
-      v-show="isRerenderNeeded && isProjectFilled"
+      class="optional-notification render-offer"
+      v-show="isRenderNeeded && isProjectFilled"
     >
       <div>
         As the settings were changed, these miniature images are outdated,
@@ -112,8 +112,8 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
 
 .result-images {
   .optional-notification {
@@ -126,7 +126,7 @@ export default {
     &.save-image-hint {
       display: none;
     }
-    &.rerender-offer {
+    &.render-offer {
       display: grid;
       grid-template-columns: 5fr 3fr;
       gap: 30px;
@@ -219,7 +219,7 @@ export default {
   .result-images {
     order: -1;
     .optional-notification {
-      &.rerender-offer {
+      &.render-offer {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
       }

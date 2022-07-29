@@ -15,7 +15,7 @@ export default {
     isProjectSaved: Boolean,
     isProjectFilled: Boolean,
     projectId: String,
-    post: Object,
+    project: Object,
   },
 
   emits: [
@@ -41,12 +41,12 @@ export default {
     publishProject() {
       this.$emit('set-server-request-status', true);
 
-      projectApi.publish(this.post)
+      projectApi.publish(this.project)
         .then(response => {
           this.$emit('set-project-id', response.id);
           this.$emit('set-publish-status', true);
           this.$emit('set-save-status', true);
-          browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
+          browserStorage.remove('post', 'settings');
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
               type: 'info',
@@ -69,7 +69,7 @@ export default {
     updateProject() {
       this.$emit('set-server-request-status', true);
 
-      projectApi.update(this.post, this.projectId)
+      projectApi.update(this.project, this.projectId)
         .then(() => {
           this.$emit('set-save-status', true);
           this.$emit('show-notification', {
@@ -89,13 +89,13 @@ export default {
     },
 
     async deleteProject() {
-      if (await ask()) {
+      if (await ask({})) {
         this.$emit('set-server-request-status', true);
 
         projectApi.delete(this.projectId)
           .then(() => {
             window.history.replaceState({}, '', window.location.origin);
-            browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
+            browserStorage.remove('post', 'settings');
             this.$emit('reset-project');
             this.$emit('show-notification', {
                 type: 'info',
@@ -118,8 +118,8 @@ export default {
     },
 
     async resetProject() {
-      if (await ask()) {
-        browserStorage.remove(this.$options.LOCAL_PROJECT_ITEM_NAME);
+      if (await ask({})) {
+        browserStorage.remove('post');
         this.$emit('reset-project');
       };
     },
@@ -181,14 +181,14 @@ export default {
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
 
 .buttons-wrapper {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  padding-top: 20px;
+  padding: 30px 0;
   align-items: baseline;
   .stretch-button {
     width: 100%;

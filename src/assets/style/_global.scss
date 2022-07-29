@@ -25,7 +25,7 @@
   --preview-aspect-ratio: 0.8;
   --preview-wrapper-padding: 20px;
   --rendered-preview-width: calc(
-    (--preview-width) 
+    var(--preview-width) 
      - (var(--preview-wrapper-padding) 
     * 2)
   );
