@@ -1,9 +1,9 @@
 const SETTINGS_ITEM_NAME = 'settings';
-const POST_ITEM_NAME = 'project';
+const POST_ITEM_NAME = 'post';
 
 const storageMatchingTable = {
   'settings': SETTINGS_ITEM_NAME,
-  'project': POST_ITEM_NAME,
+  'post': POST_ITEM_NAME,
 };
 
 export const browserStorage = {

@@ -2,7 +2,7 @@
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import AppRange from '@/components/simpleComponents/AppRange.vue';
 import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
-import { previewSettings, getDefaultSettings } from '@/data/previewSettings.js';
+import { settingsOptions, getDefaultSettings } from '@/data/settingsOptions.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
 
 export default {
@@ -14,7 +14,7 @@ export default {
 
   props: {
     isProjectPublished: Boolean,
-    previewSettings: Object,
+    settingsValues: Object,
   },
 
   emits: [
@@ -23,18 +23,18 @@ export default {
 
   data() {
     return {
-      settingsOptions: JSON.parse(JSON.stringify(previewSettings)),
-      settingsToPass: {},
+      settingsOptions: JSON.parse(JSON.stringify(settingsOptions)),
+      changingSettings: {},
     }
   },
 
   watch: {
-    previewSettings: {
+    settingsValues: {
       handler(settings) {
-        this.settingsToPass = settings;
+        this.changingSettings = settings;
         browserStorage.saveItem(
           'settings', 
-          this.settingsToPass,
+          this.changingSettings,
           this.isProjectPublished, 
         );
       },
@@ -44,7 +44,7 @@ export default {
   },
 
   created() {
-    this.settingsToPass = browserStorage.fetch('settings') 
+    this.changingSettings = browserStorage.fetch('settings') 
       || getDefaultSettings();
 
     this.passSettingsObject();
@@ -53,31 +53,31 @@ export default {
   methods: {
     passSettingsObject() {
       const settingsValues = {
-        settings: JSON.parse(JSON.stringify(this.settingsToPass)),
+        settings: JSON.parse(JSON.stringify(this.changingSettings)),
         mainTextFontFallback: 
-          this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.mainText.font].fallback,
+          this.settingsOptions.fonts.options[this.changingSettings.textApplicants.mainText.font].fallback,
         headingsFontFallback: 
-          this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.headings.font].fallback,
+          this.settingsOptions.fonts.options[this.changingSettings.textApplicants.headings.font].fallback,
       };
 
       this.$emit('change', settingsValues);
     },
 
     resetValue(textApplicant, setting, defaultValue) {
-      this.settingsToPass.textApplicants[textApplicant][setting] = defaultValue;
+      this.changingSettings.textApplicants[textApplicant][setting] = defaultValue;
       this.passSettingsObject();
     },
 
     resetPaddings() {
-      this.settingsToPass.paddings.left = this.settingsOptions.paddings.default;
-      this.settingsToPass.paddings.right = this.settingsOptions.paddings.default;
-      this.settingsToPass.paddings.bottom = this.settingsOptions.paddings.default;
-      this.settingsToPass.paddings.top = this.settingsOptions.paddings.default;
+      this.changingSettings.paddings.left = this.settingsOptions.paddings.default;
+      this.changingSettings.paddings.right = this.settingsOptions.paddings.default;
+      this.changingSettings.paddings.bottom = this.settingsOptions.paddings.default;
+      this.changingSettings.paddings.top = this.settingsOptions.paddings.default;
       this.passSettingsObject();
     },
 
     resetAllToDefault() {
-      this.settingsToPass = getDefaultSettings();
+      this.changingSettings = getDefaultSettings();
       this.passSettingsObject();
     },
   },
@@ -100,12 +100,12 @@ export default {
           :max="setting.max"
           :step="setting.step"
           :range-name="setting.name"
-          v-model="settingsToPass.textApplicants[textApplicantKey][settingKey]"
+          v-model="changingSettings.textApplicants[textApplicantKey][settingKey]"
           @input="passSettingsObject()"
         >
           <div class="single-button-wrapper">
             <AppButton
-              v-show="settingsToPass.textApplicants[textApplicantKey][settingKey] 
+              v-show="changingSettings.textApplicants[textApplicantKey][settingKey] 
                 !== setting.value"
               link-like
               class="reset-range"
@@ -119,7 +119,7 @@ export default {
           <label class="fonts-dropdown-wrapper">
             <select
               class="fonts-dropdown"
-              v-model="settingsToPass.textApplicants[textApplicantKey].font"
+              v-model="changingSettings.textApplicants[textApplicantKey].font"
               @change="passSettingsObject"
             >
               <option 
@@ -146,7 +146,7 @@ export default {
             :max="settingsOptions.paddings.max"
             :step="settingsOptions.paddings.step"
             :range-name="side"
-            v-model="settingsToPass.paddings[sideKey]"
+            v-model="changingSettings.paddings[sideKey]"
             @input="passSettingsObject"
           />
         </div>

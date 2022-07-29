@@ -45,6 +45,11 @@ export default {
     color: colors.$secondary-darker;
     background-color: colors.$app-background;
     cursor: pointer;
+    &.big {
+      letter-spacing: 2px;
+      padding: 15px 10px;
+      font-size: 16px;
+    }
     &:hover {
       border: 1px solid colors.$active-button-hover;
       box-shadow: 3px 3px colors.$active-button-hover;
@@ -69,6 +74,10 @@ export default {
     background-color: transparent;
     transition: color 0.2s;
     cursor: pointer;
+    &.big {
+      letter-spacing: 1px;
+      font-size: 16px;
+    }
     &:hover {
       color: colors.$secondary;
     }
@@ -82,11 +91,6 @@ export default {
     &.markdown {
       margin-bottom: 20px;
     }
-  }
-  &.big {
-    letter-spacing: 2px;
-    padding: 15px 10px;
-    font-size: 16px;
   }
 }  
 </style>

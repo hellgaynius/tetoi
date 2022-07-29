@@ -174,11 +174,11 @@ output:
         {
           text: `### Important note
 Default values in destructuring assignement only work if the variables either _don't exist_ or their value is _set to undefined_. 
-\\\
+\\\\\\
 Any other value, including:
-1. --= ...........................................___null___, 
-334. --= .................................___false___ and 
-4. --= ...............................___0___ (zero), 
+1. --= ___null___
+2. --= ___false___ 
+3. --= ___0___
 
 bypasses the default values in the destructuring statement.
           `,
@@ -193,10 +193,6 @@ bypasses the default values in the destructuring statement.
 # -=- That's it for now!
 -=- Hope you enjoyed!
           `,
-          id: nanoid(),
-        },
-        {
-          text: '',
           id: nanoid(),
         },
       ],
@@ -215,12 +211,12 @@ bypasses the default values in the destructuring statement.
         textApplicants: {
           headings: {
             font: 'Jura', 
-            fontSize: 18, 
+            fontSize: 16, 
             lineHeight: 1,
           },
           mainText: {
             font: 'Finlandica', 
-            fontSize: 16, 
+            fontSize: 18, 
             lineHeight: 1.2,
           },
         },

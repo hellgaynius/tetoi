@@ -10,6 +10,7 @@ import AppNotification from '@/components/helperComponents/AppNotification.vue';
 import AppConfirmation from '@/components/helperComponents/AppConfirmation.vue';
 import TestProjects from '@/components/TestProjects.vue';
 import { browserStorage } from '@/browserStorage/browserStorage.js';
+import { ask } from '@/processes/confirmation.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
@@ -76,7 +77,7 @@ export default {
     post: {
       handler() {
         browserStorage.saveItem(
-          'project',
+          'post',
           this.post,
           this.statuses.isProjectPublished, 
           this.isProjectFilled, 
@@ -124,7 +125,7 @@ export default {
         this.previewSettings = serverProject.settings;
       } else {
         this.projectId = null;
-        localProject = browserStorage.fetch('project');
+        localProject = browserStorage.fetch('post');
       };
 
       if (localProject) {
@@ -246,6 +247,33 @@ export default {
       });
     },
 
+    async checkHowToSetTestProject(project) {
+      if (this.isProjectFilled && !this.statuses.isProjectPublished) {
+        const answer = await ask({
+          question: `test project will override your current one. 
+            are you sure you want to load it?`,
+          isTextBig: false,
+        });
+
+        if (answer) {
+          this.setTestProject(project);
+        }
+      } else if (this.isProjectPublished) {
+        this.showNotification( {
+          type: 'info',
+          text: `Your previous project is still available via the link
+          ${window.location}`,
+        });
+        window.history.replaceState({}, '', window.location.origin);
+        this.setTestProject(project);
+        this.projectId = null;
+        this.statuses.isProjectSaved = false;
+        this.statuses.isProjectPublished = false;
+      } else {
+        this.setTestProject(project);
+      }
+    },
+
     setTestProject(project) {
       this.post = project.post;
       this.previewSettings = project.settings;
@@ -274,7 +302,7 @@ export default {
       >
       </div>
       <PreviewSettings
-        :preview-settings="previewSettings.settings"
+        :settings-values="previewSettings.settings"
         :is-project-published="statuses.isProjectPublished"
         v-show="!switchers.areSettingsHidden"
         @change="setSettings"
@@ -304,7 +332,7 @@ export default {
         @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
       />
       <div class="items-grid-wrapper">
-        <div class="toggle-button-wrapper markdown">
+        <div class="toggle-button-wrapper left-align">
           <AppButton 
             link-like
             markdown
@@ -354,7 +382,7 @@ export default {
         @show-notification="showNotification"
       />
       <div class="test-projects-wrapper">
-        <div class="toggle-button-wrapper">
+        <div class="toggle-button-wrapper left-align">
           <AppButton 
             link-like
             markdown
@@ -364,15 +392,8 @@ export default {
           </AppButton>
         </div>
         <TestProjects 
-          v-show="!switchers.areTestProjectsHidden"
-          :preview-settings="previewSettings"
-          :is-project-filled="isProjectFilled"
-          :is-project-published="statuses.isProjectPublished"
-          @set-test-project="setTestProject"
-          @set-project-id="setProjectId"
-          @set-save-status="setStatus('isProjectSaved', $event)"
-          @set-publish-status="setStatus('isProjectPublished', $event)"
-          @show-notification="showNotification"
+          v-if="!switchers.areTestProjectsHidden"
+          @set-test-project="checkHowToSetTestProject"
         />
       </div>
     </main>
@@ -433,13 +454,17 @@ export default {
   .toggle-button-wrapper {
     display: flex;
     justify-content: flex-end;
-    &.markdown {
+    &.left-align {
       justify-content: flex-start;
     }
   }
   .test-projects-wrapper {
-    padding-top: 50px;
-    height: 150px;
+    height: 100px;
+  }
+  .break-line {
+    margin-bottom: 30px;
+    border: none;
+    border-bottom: 1px solid colors.$secondary;
   }
   .project-status {
     text-align: center;

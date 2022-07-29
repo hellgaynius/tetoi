@@ -46,7 +46,7 @@ export default {
           this.$emit('set-project-id', response.id);
           this.$emit('set-publish-status', true);
           this.$emit('set-save-status', true);
-          browserStorage.remove('project', 'settings');
+          browserStorage.remove('post', 'settings');
           window.history.replaceState({}, '', response.id);
           this.$emit('show-notification', {
               type: 'info',
@@ -95,7 +95,7 @@ export default {
         projectApi.delete(this.projectId)
           .then(() => {
             window.history.replaceState({}, '', window.location.origin);
-            browserStorage.remove('project', 'settings');
+            browserStorage.remove('post', 'settings');
             this.$emit('reset-project');
             this.$emit('show-notification', {
                 type: 'info',
@@ -119,7 +119,7 @@ export default {
 
     async resetProject() {
       if (await ask({})) {
-        browserStorage.remove('project');
+        browserStorage.remove('post');
         this.$emit('reset-project');
       };
     },
@@ -188,7 +188,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  padding-top: 20px;
+  padding: 30px 0;
   align-items: baseline;
   .stretch-button {
     width: 100%;

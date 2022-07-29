@@ -3,9 +3,8 @@ import { DeferredBoolean } from '@/utils/utils.js';
 
 export const confirmation = reactive({
   isModalOn: false,
-  question: 'are you sure?',
-  height: 250,
-  fontSize: 40,
+  question: '',
+  isTextBig: true,
 });
 
 export const useConfirmation = () => {
@@ -15,15 +14,13 @@ export const useConfirmation = () => {
 export let modalPromise;
 
 export function ask({
-    question = confirmation.question,
-    height = confirmation.height,
-    fontSize = confirmation.fontSize,
+    question = 'are you sure?',
+    isTextBig = true,
   }) {
   modalOn();
   modalPromise = new DeferredBoolean;
   confirmation.question = question;
-  confirmation.height = height;
-  confirmation.fontSize = fontSize;
+  confirmation.isTextBig = isTextBig;
 
   return modalPromise.promise;
 };

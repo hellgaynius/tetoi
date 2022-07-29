@@ -55,13 +55,10 @@ export default {
     ref="confirmationOverlay"
     @click="cancel"
   ></div>
-  <div 
-    class="question-window"
-    :style="`--question-window-height: ${confirmation.height}px;`"
-  >
+  <div class="question-window">
     <div 
       class="question"
-      :style="`--question-window-font-size: ${confirmation.fontSize}px;`"
+      :class="{ 'big-text': confirmation.isTextBig }"
     >
       {{ confirmation.question }}
       <div class="buttons-container">
@@ -104,7 +101,7 @@ export default {
     top: 40%;
     transform: translate(-50%, -50%);
     width: 450px;
-    font-size: var(--question-window-height);
+    min-height: 250px;
     padding: 50px;
     background-color: colors.$app-background;
     border: 3px solid colors.$main-active;
@@ -114,7 +111,10 @@ export default {
   .question {
     margin: 0 auto;
     text-align: center;
-    font-size: var(--question-window-font-size);
+    font-size: 28px;
+    &.big-text {
+      font-size: 40px;
+    }
   }
   .buttons-container {
     display: grid;
