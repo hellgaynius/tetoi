@@ -1,4 +1,4 @@
-export const previewSettings = {
+export const settingsOptions = {
   paddings: {
     name: 'Paddings',
     default: 20,

@@ -76,8 +76,8 @@
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
 
 .notification {
   position: fixed;

@@ -8,7 +8,9 @@ import AppButton from '@/components/simpleComponents/AppButton.vue';
 import AppPreloader from '@/components/helperComponents/AppPreloader.vue';
 import AppNotification from '@/components/helperComponents/AppNotification.vue';
 import AppConfirmation from '@/components/helperComponents/AppConfirmation.vue';
+import TestProjects from '@/components/TestProjects.vue';
 import { browserStorage } from '@/browserStorage/browserStorage.js';
+import { ask } from '@/processes/confirmation.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
 
@@ -25,6 +27,7 @@ export default {
     MarkdownHint,
     ResultImages,
     ProjectActions,
+    TestProjects,
   },
 
   data() {
@@ -43,7 +46,7 @@ export default {
         isServerRequestOngoing: false,
         isProjectSaved: false,
         isProjectPublished: false,
-        isRerenderNeeded: false,
+        isRenderNeeded: false,
         isCreateBulkImagesRequested: false,
         isRenderOngoing: false,
         areInitialPreviewSettingsPassed: false,
@@ -51,6 +54,7 @@ export default {
       switchers: {
         isMarkdownHintHidden: true,
         areSettingsHidden: true,
+        areTestProjectsHidden: true,
       },
     }
   },
@@ -60,20 +64,27 @@ export default {
       return !!(this.post?.fullText ||
         this.post?.slots.some(slot => slot.text));
     },
+
+    project() {
+      return {
+        post: this.post,
+        settings: this.previewSettings,
+      }
+    }
   },
 
   watch: {
     post: {
       handler() {
-        browserStorage.handlePostObject(
-          this.isProjectFilled, 
-          this.statuses.isProjectPublished, 
-          'project',
+        browserStorage.saveItem(
+          'post',
           this.post,
+          this.statuses.isProjectPublished, 
+          this.isProjectFilled, 
         );
 
         if (!this.isProjectFilled) {
-          this.statuses.isRerenderNeeded = false;
+          this.statuses.isRenderNeeded = false;
         }
       },
 
@@ -109,23 +120,21 @@ export default {
         serverProject = await this.fetchProject(this.projectId);
       };
 
-      if (!serverProject) {
+      if (serverProject) {
+        this.post = serverProject.post;
+        this.previewSettings = serverProject.settings;
+      } else {
         this.projectId = null;
-        localProject = browserStorage.fetch('project');
+        localProject = browserStorage.fetch('post');
       };
 
       if (localProject) {
+        this.post = localProject;
         this.showNotification({
           type: 'info',
           text: `Project is saved locally for this browser. <br>
             To have access from everywhere, publish your project.`,
         });
-      };
-
-      const project = serverProject || localProject;
-
-      if (project) {
-        this.post = project;
       };
 
       this.statuses.isCreateBulkImagesRequested = true;
@@ -187,14 +196,6 @@ export default {
       this.switchers[switcher] = !this.switchers[switcher];
     },
 
-    toggleSettings() {
-      this.switchers.areSettingsHidden = !this.switchers.areSettingsHidden;
-    },
-
-    toggleMarkdownHint() {
-      this.switchers.isMarkdownHintHidden = !this.switchers.isMarkdownHintHidden;
-    },
-
     changeCurrentSlotIndex(index) {
       this.currentSlotIndex = index;
     },
@@ -232,7 +233,7 @@ export default {
       };
 
       if (this.areInitialPreviewSettingsPassed) {
-        this.statuses.isRerenderNeeded = true;
+        this.statuses.isRenderNeeded = true;
       };
     },
 
@@ -244,6 +245,40 @@ export default {
         type: 'info',
         text: 'Your project was reset',
       });
+    },
+
+    async handleRequestToSetTestProject(project) {
+      if (this.isProjectFilled && !this.statuses.isProjectPublished) {
+        const answer = await ask({
+          question: `test project will override your current one. 
+            are you sure you want to load it?`,
+          isTextBig: false,
+        });
+
+        if (answer) {
+          this.setTestProject(project);
+        }
+      } else if (this.isProjectPublished) {
+        this.showNotification( {
+          type: 'info',
+          text: `Your previous project is still available via the link
+          ${window.location}`,
+        });
+        window.history.replaceState({}, '', window.location.origin);
+        this.setTestProject(project);
+        this.projectId = null;
+        this.statuses.isProjectSaved = false;
+        this.statuses.isProjectPublished = false;
+      } else {
+        this.setTestProject(project);
+      }
+    },
+
+    setTestProject(project) {
+      this.post = project.post;
+      this.previewSettings = project.settings;
+      this.currentSlotIndex = 0;
+      this.statuses.isCreateBulkImagesRequested = true;
     },
   },
 };
@@ -267,6 +302,8 @@ export default {
       >
       </div>
       <PreviewSettings
+        :settings-values="previewSettings.settings"
+        :is-project-published="statuses.isProjectPublished"
         v-show="!switchers.areSettingsHidden"
         @change="setSettings"
       />
@@ -274,7 +311,7 @@ export default {
         <AppButton 
           link-like
           settings
-          @click="toggleSettings"
+          @click="toggleSwitcher('areSettingsHidden')"
         >
           {{ switchers.areSettingsHidden ? 'show' : 'hide' }} text settings
         </AppButton>
@@ -291,15 +328,15 @@ export default {
         @save-text="saveText"
         @change-slot-image="changeSlotImage"
         @set-rendering-status="setStatus('isRenderOngoing', $event)"
-        @set-rerendering-need="setStatus('isRerenderNeeded', $event)"
+        @set-rendering-need="setStatus('isRenderNeeded', $event)"
         @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
       />
       <div class="items-grid-wrapper">
-        <div class="toggle-button-wrapper markdown">
+        <div class="toggle-button-wrapper left-align">
           <AppButton 
             link-like
             markdown
-            @click="toggleMarkdownHint"
+            @click="toggleSwitcher('isMarkdownHintHidden')"
           >
             {{ switchers.isMarkdownHintHidden ? 'show' : 'hide' }} markdown hint
           </AppButton>
@@ -324,14 +361,14 @@ export default {
         :images="images"
         :slots="post.slots"
         :slots-max-quantity="$options.SLOTS_MAX_QUANTITY"
-        :is-rerender-needed="statuses.isRerenderNeeded"
+        :is-render-needed="statuses.isRenderNeeded"
         :is-project-filled="isProjectFilled"
         @set-create-bulk-images-request-status="setStatus('isCreateBulkImagesRequested', $event)"
         @change-current-slot-index="changeCurrentSlotIndex"
         @remove-slot="removeSlot"
       />
       <ProjectActions
-        :post="post"
+        :project="project"
         :projectId="projectId"
         :is-request-ongoing="statuses.isServerRequestOngoing"
         :is-project-filled="isProjectFilled"
@@ -344,17 +381,32 @@ export default {
         @reset-project="resetProject"
         @show-notification="showNotification"
       />
+      <div class="test-projects-wrapper">
+        <div class="toggle-button-wrapper left-align">
+          <AppButton 
+            link-like
+            markdown
+            @click="toggleSwitcher('areTestProjectsHidden')"
+          >
+            {{ switchers.areTestProjectsHidden ? 'show' : 'hide' }} test projects
+          </AppButton>
+        </div>
+        <TestProjects 
+          v-if="!switchers.areTestProjectsHidden"
+          @set-test-project="handleRequestToSetTestProject"
+        />
+      </div>
     </main>
   </div>
 </template>
 
 <style lang="scss">
-@use '@/assets/colors';
-@use '@/assets/breakpoints';
-@import '@/assets/global';
-@import '@/assets/preview-container';
-@import '@/assets/app-transition';
-@import '@/assets/fonts';
+@use '@/assets/style/colors';
+@use '@/assets/style/breakpoints';
+@import '@/assets/style/global';
+@import '@/assets/style/preview-container';
+@import '@/assets/style/app-transition';
+@import '@/assets/style/fonts';
 
 .app {
   display: flex;
@@ -379,7 +431,7 @@ export default {
     max-width: 800px;
     width: 100%;
     margin: 50px auto 150px auto;
-    padding: 50px 50px 80px 50px;
+    padding: 50px 50px 30px 50px;
     background-color: colors.$app-background;
     box-shadow: 10px 10px colors.$secondary;
     border: 2px solid colors.$secondary;
@@ -402,9 +454,17 @@ export default {
   .toggle-button-wrapper {
     display: flex;
     justify-content: flex-end;
-    &.markdown {
+    &.left-align {
       justify-content: flex-start;
     }
+  }
+  .test-projects-wrapper {
+    height: 100px;
+  }
+  .break-line {
+    margin-bottom: 30px;
+    border: none;
+    border-bottom: 1px solid colors.$secondary;
   }
   .project-status {
     text-align: center;
