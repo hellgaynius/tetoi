@@ -40,6 +40,7 @@ export const markdownRules = {
         '\\\\\\ empty line',
         '> blockquote',
         '`code`',
+        '___ horizontal line'
       ]
     },
     combinations: { 
