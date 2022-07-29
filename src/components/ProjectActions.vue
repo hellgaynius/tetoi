@@ -89,7 +89,7 @@ export default {
     },
 
     async deleteProject() {
-      if (await ask()) {
+      if (await ask({})) {
         this.$emit('set-server-request-status', true);
 
         projectApi.delete(this.projectId)
@@ -118,7 +118,7 @@ export default {
     },
 
     async resetProject() {
-      if (await ask()) {
+      if (await ask({})) {
         browserStorage.remove('project');
         this.$emit('reset-project');
       };

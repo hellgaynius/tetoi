@@ -8,6 +8,7 @@ import AppButton from '@/components/simpleComponents/AppButton.vue';
 import AppPreloader from '@/components/helperComponents/AppPreloader.vue';
 import AppNotification from '@/components/helperComponents/AppNotification.vue';
 import AppConfirmation from '@/components/helperComponents/AppConfirmation.vue';
+import TestProjects from '@/components/TestProjects.vue';
 import { browserStorage } from '@/browserStorage/browserStorage.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
@@ -25,6 +26,7 @@ export default {
     MarkdownHint,
     ResultImages,
     ProjectActions,
+    TestProjects,
   },
 
   data() {
@@ -51,6 +53,7 @@ export default {
       switchers: {
         isMarkdownHintHidden: true,
         areSettingsHidden: true,
+        areTestProjectsHidden: true,
       },
     }
   },
@@ -116,24 +119,21 @@ export default {
         serverProject = await this.fetchProject(this.projectId);
       };
 
-      if (!serverProject) {
+      if (serverProject) {
+        this.post = serverProject.post;
+        this.previewSettings = serverProject.settings;
+      } else {
         this.projectId = null;
         localProject = browserStorage.fetch('project');
       };
 
       if (localProject) {
+        this.post = localProject;
         this.showNotification({
           type: 'info',
           text: `Project is saved locally for this browser. <br>
             To have access from everywhere, publish your project.`,
         });
-      };
-
-      const project = serverProject || localProject;
-
-      if (project) {
-        this.post = project.post;
-        this.previewSettings = project.settings;
       };
 
       this.statuses.isCreateBulkImagesRequested = true;
@@ -195,14 +195,6 @@ export default {
       this.switchers[switcher] = !this.switchers[switcher];
     },
 
-    toggleSettings() {
-      this.switchers.areSettingsHidden = !this.switchers.areSettingsHidden;
-    },
-
-    toggleMarkdownHint() {
-      this.switchers.isMarkdownHintHidden = !this.switchers.isMarkdownHintHidden;
-    },
-
     changeCurrentSlotIndex(index) {
       this.currentSlotIndex = index;
     },
@@ -253,6 +245,13 @@ export default {
         text: 'Your project was reset',
       });
     },
+
+    setTestProject(project) {
+      this.post = project.post;
+      this.previewSettings = project.settings;
+      this.currentSlotIndex = 0;
+      this.statuses.isCreateBulkImagesRequested = true;
+    },
   },
 };
 </script>
@@ -275,6 +274,7 @@ export default {
       >
       </div>
       <PreviewSettings
+        :preview-settings="previewSettings.settings"
         :is-project-published="statuses.isProjectPublished"
         v-show="!switchers.areSettingsHidden"
         @change="setSettings"
@@ -283,7 +283,7 @@ export default {
         <AppButton 
           link-like
           settings
-          @click="toggleSettings"
+          @click="toggleSwitcher('areSettingsHidden')"
         >
           {{ switchers.areSettingsHidden ? 'show' : 'hide' }} text settings
         </AppButton>
@@ -308,7 +308,7 @@ export default {
           <AppButton 
             link-like
             markdown
-            @click="toggleMarkdownHint"
+            @click="toggleSwitcher('isMarkdownHintHidden')"
           >
             {{ switchers.isMarkdownHintHidden ? 'show' : 'hide' }} markdown hint
           </AppButton>
@@ -353,6 +353,28 @@ export default {
         @reset-project="resetProject"
         @show-notification="showNotification"
       />
+      <div class="test-projects-wrapper">
+        <div class="toggle-button-wrapper">
+          <AppButton 
+            link-like
+            markdown
+            @click="toggleSwitcher('areTestProjectsHidden')"
+          >
+            {{ switchers.areTestProjectsHidden ? 'show' : 'hide' }} test projects
+          </AppButton>
+        </div>
+        <TestProjects 
+          v-show="!switchers.areTestProjectsHidden"
+          :preview-settings="previewSettings"
+          :is-project-filled="isProjectFilled"
+          :is-project-published="statuses.isProjectPublished"
+          @set-test-project="setTestProject"
+          @set-project-id="setProjectId"
+          @set-save-status="setStatus('isProjectSaved', $event)"
+          @set-publish-status="setStatus('isProjectPublished', $event)"
+          @show-notification="showNotification"
+        />
+      </div>
     </main>
   </div>
 </template>
@@ -388,7 +410,7 @@ export default {
     max-width: 800px;
     width: 100%;
     margin: 50px auto 150px auto;
-    padding: 50px 50px 80px 50px;
+    padding: 50px 50px 30px 50px;
     background-color: colors.$app-background;
     box-shadow: 10px 10px colors.$secondary;
     border: 2px solid colors.$secondary;
@@ -414,6 +436,10 @@ export default {
     &.markdown {
       justify-content: flex-start;
     }
+  }
+  .test-projects-wrapper {
+    padding-top: 50px;
+    height: 150px;
   }
   .project-status {
     text-align: center;

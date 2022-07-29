@@ -14,6 +14,7 @@ export default {
 
   props: {
     isProjectPublished: Boolean,
+    previewSettings: Object,
   },
 
   emits: [
@@ -25,6 +26,21 @@ export default {
       settingsOptions: JSON.parse(JSON.stringify(previewSettings)),
       settingsToPass: {},
     }
+  },
+
+  watch: {
+    previewSettings: {
+      handler(settings) {
+        this.settingsToPass = settings;
+        browserStorage.saveItem(
+          'settings', 
+          this.settingsToPass,
+          this.isProjectPublished, 
+        );
+      },
+
+      deep: true,
+    },
   },
 
   created() {
@@ -44,11 +60,6 @@ export default {
           this.settingsOptions.fonts.options[this.settingsToPass.textApplicants.headings.font].fallback,
       };
 
-      browserStorage.saveItem(
-        'settings', 
-        this.settingsToPass,
-        this.isProjectPublished, 
-      );
       this.$emit('change', settingsValues);
     },
 

@@ -4,6 +4,7 @@
 .preview-container {
   width: var(--rendered-preview-width);
   height: 100%;
+  padding: 5px;
   margin: 0;
   overflow-wrap: break-word;
   overflow: hidden;
@@ -59,8 +60,7 @@
   blockquote {
     padding: 10px;
     margin-inline: 15px;
-    color: colors.$secondary-darker;
-    border-left: 5px solid colors.$secondary;
+    border-left: 5px solid colors.$preview-border;
   }
   code {
     display: block;

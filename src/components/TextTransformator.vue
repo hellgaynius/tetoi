@@ -93,8 +93,10 @@ export default {
     },
 
     currentTextValue(value) {
-      if (!value) {
-        this.renderedPreview = '';
+      if (value) {
+        this.buildDependentEntitiesForSlotDebounced();
+      } else {
+        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
       };
     },
 
@@ -129,12 +131,6 @@ export default {
   methods: {
     saveSlotText(event) {
       this.$emit('save-text', event.target.value, 'slot');
-
-      if (this.currentTextValue) {
-        this.buildDependentEntitiesForSlotDebounced();
-      } else {
-        this.buildDependentEntitiesForSlot(this.currentSlotIndex);
-      };
     },
 
     saveFullText(event) {
