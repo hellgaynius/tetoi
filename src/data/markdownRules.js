@@ -38,9 +38,9 @@ export const markdownRules = {
         // six of them in the code
         // so that three of them appear on the webpage
         '\\\\\\ empty line',
+        '___ horizontal line',
         '> blockquote',
         '`code`',
-        '___ horizontal line'
       ]
     },
     combinations: { 

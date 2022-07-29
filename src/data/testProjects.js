@@ -1,3 +1,7 @@
+// As backslash is an escape symbol, we need to write six of them in the code
+// so that three of them appear on the webpage.
+// The lines with text are not indented to render normally on the webpage as well.
+
 import { nanoid } from 'nanoid';
 
 export const testProjects = {
@@ -146,7 +150,7 @@ To her it seemed most wonderful and beautiful to hear
   },
 
   project_2: {
-    title: 'project_2',
+    title: 'Destructurization',
     name: 'project_2',
     post: {
       fullText: 'test project #2 (there will be no full text of the project haha)', 

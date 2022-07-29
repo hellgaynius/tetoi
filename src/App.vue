@@ -247,7 +247,7 @@ export default {
       });
     },
 
-    async checkHowToSetTestProject(project) {
+    async handleRequestToSetTestProject(project) {
       if (this.isProjectFilled && !this.statuses.isProjectPublished) {
         const answer = await ask({
           question: `test project will override your current one. 
@@ -393,7 +393,7 @@ export default {
         </div>
         <TestProjects 
           v-if="!switchers.areTestProjectsHidden"
-          @set-test-project="checkHowToSetTestProject"
+          @set-test-project="handleRequestToSetTestProject"
         />
       </div>
     </main>
