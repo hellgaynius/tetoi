@@ -51,6 +51,9 @@ export default {
     isPreviewButtonDisabled() {
       return !this.renderedPreview || !this.isProjectFilled;
     },
+    lang() {
+      return this.previewSettings?.settings?.additional.lang || 'en';
+    },
 
     currentTextValue() {
       return this.post.slots[this.currentSlotIndex]?.text;
@@ -80,6 +83,8 @@ export default {
           --headings-font-family: 
             ${this.previewSettings.settings.textApplicants.headings.font}, 
             ${this.previewSettings.headingsFontFallback};
+          hyphens: ${this.previewSettings?.settings?.additional.withHyphenation ? 'auto' : 'none' };
+          text-align: ${this.previewSettings.settings.additional.isJustified ? 'justify' : 'left'};
         `
       };
     }
@@ -238,7 +243,10 @@ export default {
         </label>
       </div>
     </div>
-    <div class="preview-block">
+    <div
+      class="preview-block"
+      :lang="lang"
+    >
       <div class="preview-label">
         Preview:
       </div>

@@ -92,27 +92,55 @@ export const settingsOptions = {
       },
     },
   },
+  withHyphenation: {
+    name: 'With hyphenation:',
+    default: true,
+  },
+  lang: {
+    name: 'Language',
+    default: 'uk',
+    options: [
+      {
+        name: 'English',
+        value: 'en',
+      },
+      {
+        name: 'Russian',
+        value: 'ru',
+      },
+      {
+        name: 'Ukrainian',
+        value: 'uk',
+      },
+    ]
+  },
+  isJustified: true,
 }
 
 export function getDefaultSettings() {
   return {
     paddings: {
-      left: previewSettings.paddings.default,
-      right: previewSettings.paddings.default,
-      bottom: previewSettings.paddings.default,
-      top: previewSettings.paddings.default,
+      left: settingsOptions.paddings.default,
+      right: settingsOptions.paddings.default,
+      bottom: settingsOptions.paddings.default,
+      top: settingsOptions.paddings.default,
     },
     textApplicants: {
       headings: {
-        font: previewSettings.fonts.default,
-        fontSize: previewSettings.textApplicants.headings.settings.fontSize.value,
-        lineHeight: previewSettings.textApplicants.headings.settings.lineHeight.value,
+        font: settingsOptions.fonts.default,
+        fontSize: settingsOptions.textApplicants.headings.settings.fontSize.value,
+        lineHeight: settingsOptions.textApplicants.headings.settings.lineHeight.value,
       },
       mainText: {
-        font: previewSettings.fonts.default,
-        fontSize: previewSettings.textApplicants.mainText.settings.fontSize.value,
-        lineHeight: previewSettings.textApplicants.mainText.settings.lineHeight.value,
+        font: settingsOptions.fonts.default,
+        fontSize: settingsOptions.textApplicants.mainText.settings.fontSize.value,
+        lineHeight: settingsOptions.textApplicants.mainText.settings.lineHeight.value,
       },
     },
+    additional: {
+      withHyphenation: settingsOptions.withHyphenation.default,
+      lang: settingsOptions.lang.default,
+      isJustified: settingsOptions.isJustified,
+    }
   }
 };
