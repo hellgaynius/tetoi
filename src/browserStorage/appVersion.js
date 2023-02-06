@@ -1,9 +1,9 @@
 import packageJSON from '../../package.json';
 
 export default function checkAppVersion() {
-  const localeStorageVersion = localStorage.getItem('version');
+  const localStorageVersion = localStorage.getItem('version');
 
-  if (!(localeStorageVersion && localeStorageVersion === packageJSON.version)) {
+  if (!(localStorageVersion && localStorageVersion === packageJSON.version)) {
     localStorage.clear()
     localStorage.setItem('version', packageJSON.version);
 
