@@ -184,7 +184,7 @@ export default {
           @change="passSettingsObject"
         >
           <option 
-            v-for="(option) in settingsOptions.lang.options"
+            v-for="option in settingsOptions.lang.options"
             :key="option.value"
             :value="option.value"
           >

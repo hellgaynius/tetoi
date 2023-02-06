@@ -32,9 +32,8 @@ export default {
     },
   },
   methods: {
-    change(event) {
-      const isChecked = event.target.checked;
-
+    change(isChecked) {
+      console.log(isChecked);
       if (this.modelValue instanceof Array) {
         const newValue = [...this.modelValue];
 
@@ -64,7 +63,7 @@ export default {
       :value="value"
       :disabled="disabled"
       :checked="isChecked"
-      @change="change"
+      @change="change($event.target.checked)"
     >
     <div
       class="label"
