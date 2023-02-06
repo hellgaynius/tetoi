@@ -92,6 +92,29 @@ export const settingsOptions = {
       },
     },
   },
+  withHyphenation: {
+    name: 'With hyphenation:',
+    default: true,
+  },
+  lang: {
+    name: 'Language',
+    default: 'uk',
+    options: [
+      {
+        name: 'English',
+        value: 'en',
+      },
+      {
+        name: 'Russian',
+        value: 'ru',
+      },
+      {
+        name: 'Ukrainian',
+        value: 'uk',
+      },
+    ]
+  },
+  isJustified: true,
 }
 
 export function getDefaultSettings() {
@@ -114,5 +137,10 @@ export function getDefaultSettings() {
         lineHeight: settingsOptions.textApplicants.mainText.settings.lineHeight.value,
       },
     },
+    additional: {
+      withHyphenation: settingsOptions.withHyphenation.default,
+      lang: settingsOptions.lang.default,
+      isJustified: settingsOptions.isJustified,
+    }
   }
 };
