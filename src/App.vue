@@ -235,6 +235,10 @@ export default {
       if (this.areInitialPreviewSettingsPassed) {
         this.statuses.isRenderNeeded = true;
       };
+
+      if (this.statuses.isProjectPublished) {
+        this.statuses.isProjectSaved = false;
+      };
     },
 
     resetProject() {

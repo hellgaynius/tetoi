@@ -1,6 +1,7 @@
 <script>
 import AppButton from '@/components/simpleComponents/AppButton.vue';
 import AppRange from '@/components/simpleComponents/AppRange.vue';
+import AppCheckbox from '@/components/simpleComponents/AppCheckbox.vue';
 import SettingBlockWrapper from '@/components/helperComponents/SettingBlockWrapper.vue';
 import { settingsOptions, getDefaultSettings } from '@/data/settingsOptions.js';
 import { browserStorage } from '@/browserStorage/browserStorage.js'
@@ -9,6 +10,7 @@ export default {
   components: {
     AppButton,
     AppRange,
+    AppCheckbox,
     SettingBlockWrapper,
   },
 
@@ -162,6 +164,41 @@ export default {
       </SettingBlockWrapper>
     </div>
   </div>
+  <SettingBlockWrapper
+    subname="Aligning and hyphenation:"
+    class="additional-wrapper"
+  >
+    <div class="additional-settings">
+      <AppCheckbox
+        label="With hyphenation"
+        v-model="changingSettings.additional.withHyphenation"
+        @change="passSettingsObject"
+      />
+      <label
+        class="fonts-dropdown-wrapper"
+        v-if="changingSettings.additional.withHyphenation"
+      >
+        <select
+          class="fonts-dropdown"
+          v-model="changingSettings.additional.lang"
+          @change="passSettingsObject"
+        >
+          <option 
+            v-for="(option) in settingsOptions.lang.options"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.name }}
+          </option>
+        </select>
+      </label>
+      <AppCheckbox
+        label="Justify text"
+        v-model="changingSettings.additional.isJustified"
+        @change="passSettingsObject"
+      />
+    </div>
+  </SettingBlockWrapper>
   <AppButton 
     class="reset"
     link-like
@@ -211,6 +248,15 @@ export default {
   }
   .reset {
     margin: 15px 30px;
+  }
+  .additional-wrapper {
+    padding-left: 30px;
+  }
+  .additional-settings {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    min-height: 40px;
   }
 }
 
