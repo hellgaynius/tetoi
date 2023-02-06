@@ -13,6 +13,7 @@ import { browserStorage } from '@/browserStorage/browserStorage.js';
 import { ask } from '@/processes/confirmation.js';
 import { projectApi } from '@/api/projectApi.js';
 import { nanoid } from 'nanoid';
+import checkAppVersion from '@/browserStorage/appVersion';
 
 export default {
   SLOTS_MAX_QUANTITY: 10,
@@ -93,6 +94,7 @@ export default {
   },
 
   created() {
+    checkAppVersion();
     this.setInitialPost();
     this.initProjectState();
   },
