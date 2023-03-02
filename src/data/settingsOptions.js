@@ -92,10 +92,12 @@ export const settingsOptions = {
       },
     },
   },
+
   withHyphenation: {
     name: 'With hyphenation:',
     default: true,
   },
+
   lang: {
     name: 'Language',
     default: 'uk',
@@ -114,6 +116,7 @@ export const settingsOptions = {
       },
     ]
   },
+  
   isJustified: true,
 }
 

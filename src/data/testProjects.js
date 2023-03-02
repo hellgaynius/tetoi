@@ -145,6 +145,11 @@ To her it seemed most wonderful and beautiful to hear
             lineHeight: 1.1,
           },
         },
+        additional: {
+          withHyphenation: true,
+          lang: 'en',
+          isJustified: true,
+        },
       },
     },
   },
@@ -248,6 +253,11 @@ bypasses the default values in the destructuring statement.
             fontSize: 18, 
             lineHeight: 1.2,
           },
+        },
+        additional: {
+          withHyphenation: true,
+          lang: 'en',
+          isJustified: true,
         },
       },
     },

@@ -33,7 +33,6 @@ export default {
   },
   methods: {
     change(isChecked) {
-      console.log(isChecked);
       if (this.modelValue instanceof Array) {
         const newValue = [...this.modelValue];
 
